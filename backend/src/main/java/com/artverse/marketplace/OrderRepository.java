@@ -8,5 +8,6 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
     Page<Order> findByBuyerIdOrderByCreatedAtDesc(UUID buyerId, Pageable pageable);
+    Page<Order> findBySellerIdOrderByCreatedAtDesc(UUID sellerId, Pageable pageable);
     Optional<Order> findByAuctionId(UUID auctionId);
 }
