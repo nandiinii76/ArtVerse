@@ -17,6 +17,26 @@ services:
       timeout: 5s
       retries: 10
 
+  opensearch:
+    image: opensearchproject/opensearch:2.17.1
+    container_name: artverse-opensearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - artverse_opensearch_data:/usr/share/opensearch/data
+
   backend:
     build:
       context: ./backend
@@ -25,12 +45,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      opensearch:
+        condition: service_started
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-artverse}
       DB_USERNAME: ${DB_USERNAME:-artverse}
       DB_PASSWORD: ${DB_PASSWORD:-artverse}
       JWT_SECRET: ${JWT_SECRET:-change-this-to-a-long-random-string-in-.env-minimum-32-chars}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      OPENSEARCH_URL: http://opensearch:9200
+      OPENSEARCH_ENABLED: ${OPENSEARCH_ENABLED:-true}
     ports:
       - "8080:8080"
 
@@ -51,3 +75,4 @@ services:
 
 volumes:
   artverse_postgres_data:
+  artverse_opensearch_data:
