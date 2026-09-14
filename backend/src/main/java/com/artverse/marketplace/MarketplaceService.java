@@ -44,6 +44,11 @@ public class MarketplaceService {
         return listings.findByStatus(ListingStatus.ACTIVE, pageable).map(MarketplaceDtos.ListingResponse::from);
     }
 
+    public Page<MarketplaceDtos.ListingResponse> myListings(User seller, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50));
+        return listings.findBySellerIdOrderByCreatedAtDesc(seller.getId(), pageable).map(MarketplaceDtos.ListingResponse::from);
+    }
+
     public MarketplaceDtos.ListingResponse getListing(UUID id) {
         return MarketplaceDtos.ListingResponse.from(listings.findById(id).orElseThrow(() -> ApiException.notFound("LISTING_NOT_FOUND", "Marketplace listing not found")));
     }
@@ -108,6 +113,11 @@ public class MarketplaceService {
     public Page<MarketplaceDtos.OrderResponse> myOrders(User buyer, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.min(Math.max(size, 1), 50));
         return orders.findByBuyerIdOrderByCreatedAtDesc(buyer.getId(), pageable).map(MarketplaceDtos.OrderResponse::from);
+    }
+
+    public Page<MarketplaceDtos.OrderResponse> mySales(User seller, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.min(Math.max(size, 1), 50));
+        return orders.findBySellerIdOrderByCreatedAtDesc(seller.getId(), pageable).map(MarketplaceDtos.OrderResponse::from);
     }
 
     private MarketplaceListing listing(UUID id) { return listings.findById(id).orElseThrow(() -> ApiException.notFound("LISTING_NOT_FOUND", "Marketplace listing not found")); }
