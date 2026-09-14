@@ -1,0 +1,13 @@
+import { useEffect, useState } from 'react'
+import { api, extractErrorMessage } from '@/lib/api'
+
+type Transaction={orderId:string;sellerId?:string;buyerId:string;auctionId?:string;amount:number;currency:string;status:string;createdAt:string;paymentReference?:string}
+type Provenance={artworkId:string;title:string;artistId:string;currentOwnerId:string;certificateNumber:string;issuedAt:string;transactions:Transaction[]}
+
+export function ProvenancePanel({artworkId}:{artworkId:string}){
+ const [data,setData]=useState<Provenance|null>(null);const [error,setError]=useState('')
+ useEffect(()=>{api.get<Provenance>(`/provenance/artworks/${artworkId}`).then(r=>setData(r.data)).catch(e=>setError(extractErrorMessage(e)))},[artworkId])
+ if(error)return <section className="mt-12 border-t border-ink/10 pt-8"><p className="label-meta">Provenance</p><p className="mt-3 text-sm text-oxblood">{error}</p></section>
+ if(!data)return <section className="mt-12 border-t border-ink/10 pt-8"><p className="label-meta">Provenance</p><p className="mt-3 text-sm text-ink/40">Reading the provenance ledger…</p></section>
+ return <section className="mt-16 border-t border-ink/10 pt-10"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="label-meta">Provenance ledger</p><h2 className="mt-2 font-serif text-3xl">A record of ownership.</h2><p className="mt-2 text-sm text-ink/50">Certificate {data.certificateNumber}</p></div><a className="btn-outline" href={`/api/v1/provenance/artworks/${artworkId}/certificate`}>Download certificate</a></div><div className="mt-8 grid gap-4 border-y border-ink/10 py-6 sm:grid-cols-2"><div><p className="label-meta">Current owner</p><p className="mt-2 break-all text-sm">{data.currentOwnerId}</p></div><div><p className="label-meta">Certificate issued</p><p className="mt-2 text-sm">{new Date(data.issuedAt).toLocaleString()}</p></div></div><div className="mt-8"><p className="label-meta">Transaction history</p>{data.transactions.length===0?<p className="mt-4 text-sm text-ink/45">Original creator record. No platform sale or auction settlement has been recorded.</p>:<div className="mt-4 space-y-3">{data.transactions.map(t=><div key={t.orderId} className="border border-ink/10 p-4"><div className="flex flex-wrap justify-between gap-2"><span className="text-[10px] uppercase tracking-widest text-olive">{t.status}</span><span className="text-sm">{t.currency} {t.amount.toLocaleString()}</span></div><p className="mt-2 text-xs text-ink/50">{new Date(t.createdAt).toLocaleString()} · Buyer {t.buyerId}</p>{t.auctionId&&<p className="mt-1 text-xs text-ink/40">Auction settlement</p>}</div>)}</div>}</div></section>
+}
