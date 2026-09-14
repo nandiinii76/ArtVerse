@@ -30,6 +30,10 @@ public class ArtworkService {
         return repository.search(blankToNull(q), blankToNull(category), ArtworkStatus.PUBLISHED, pageable).map(ArtworkDtos.Response::from);
     }
 
+    public Page<ArtworkDtos.Response> mine(UUID artistId, Pageable pageable) {
+        return repository.findByArtistIdAndStatus(artistId, ArtworkStatus.PUBLISHED, pageable).map(ArtworkDtos.Response::from);
+    }
+
     public ArtworkDtos.Response get(UUID id) {
         Artwork a = repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Artwork not found"));
         if (a.getStatus() == ArtworkStatus.PUBLISHED) {
