@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface MarketplaceListingRepository extends JpaRepository<MarketplaceListing, UUID> {
     Optional<MarketplaceListing> findByArtworkId(UUID artworkId);
     Page<MarketplaceListing> findByStatus(ListingStatus status, Pageable pageable);
+    Page<MarketplaceListing> findBySellerIdOrderByCreatedAtDesc(UUID sellerId, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<MarketplaceListing> findWithLockById(UUID id);
