@@ -4,6 +4,7 @@ import com.artverse.artwork.Artwork;
 import com.artverse.artwork.ArtworkRepository;
 import com.artverse.artwork.ArtworkStatus;
 import com.artverse.common.ApiException;
+import com.artverse.social.FollowRepository;
 import com.artverse.user.User;
 import com.artverse.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +20,14 @@ public class ArtistPublicService {
     private final ArtistProfileRepository profiles;
     private final UserRepository users;
     private final ArtworkRepository artworks;
+    private final FollowRepository follows;
 
     public ArtistPublicDtos.ProfileResponse profile(UUID userId) {
         User user = users.findById(userId)
                 .orElseThrow(() -> ApiException.notFound("ARTIST_NOT_FOUND", "Artist not found"));
         ArtistProfile profile = profiles.findByUserId(userId).orElse(null);
         long artworkCount = artworks.countByArtistIdAndStatus(userId, ArtworkStatus.PUBLISHED);
+        long followerCount = follows.countByIdFollowingId(userId);
         return new ArtistPublicDtos.ProfileResponse(
                 user.getId(), user.getDisplayName(),
                 profile == null ? user.getBio() : profile.getBiography(),
@@ -32,7 +35,7 @@ public class ArtistPublicService {
                 profile == null ? null : profile.getWebsiteUrl(),
                 profile == null ? user.getAvatarUrl() : profile.getProfileImageUrl(),
                 profile != null && profile.isVerified(),
-                user.getCreatedAt(), artworkCount, 0L);
+                user.getCreatedAt(), artworkCount, followerCount);
     }
 
     public Page<ArtistPublicDtos.ArtworkResponse> artworks(UUID userId, int page, int size) {
