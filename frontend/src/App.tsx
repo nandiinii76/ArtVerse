@@ -14,6 +14,7 @@ import { CuratorPage } from '@/pages/CuratorPage'
 import { AuctionsPage } from '@/pages/AuctionsPage'
 import { AuctionDetailPage } from '@/pages/AuctionDetailPage'
 import { CollectionsPage } from '@/pages/CollectionsPage'
+import { CollectionDetailPage } from '@/pages/CollectionDetailPage'
 import { NotificationsPage } from '@/pages/NotificationsPage'
 import { MarketplacePage } from '@/pages/MarketplacePage'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
@@ -30,6 +31,7 @@ export default function App() {
     <Route path="/marketplace" element={<MarketplacePage />} />
     <Route path="/artworks/:id" element={<ArtworkPage />} />
     <Route path="/artists/:id" element={<ArtistPage />} />
+    <Route path="/collections/:id" element={<CollectionDetailPage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
     <Route element={<ProtectedRoute />}>
