@@ -10,11 +10,18 @@ import java.util.UUID;
 @RequestMapping("/api/v1/social/favorites")
 public class FavoriteController {
     private final FavoriteRepository repository;
-    public FavoriteController(FavoriteRepository repository) { this.repository = repository; }
+    private final SocialNotificationService notifications;
+
+    public FavoriteController(FavoriteRepository repository, SocialNotificationService notifications) {
+        this.repository = repository;
+        this.notifications = notifications;
+    }
 
     @PostMapping("/{artworkId}")
     public ResponseEntity<Void> add(@PathVariable UUID artworkId, @AuthenticationPrincipal User user) {
+        boolean alreadyFavorite = repository.existsByIdArtworkIdAndIdUserId(artworkId, user.getId());
         repository.saveIfAbsent(artworkId, user.getId());
+        if (!alreadyFavorite) notifications.favorite(artworkId, user);
         return ResponseEntity.noContent().build();
     }
 
