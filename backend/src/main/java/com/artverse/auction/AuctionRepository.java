@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public interface AuctionRepository extends JpaRepository<Auction, UUID> {
     Page<Auction> findByStatus(AuctionStatus status, Pageable pageable);
+    Page<Auction> findBySellerIdOrderByEndsAtAsc(UUID sellerId, Pageable pageable);
     Optional<Auction> findByArtworkId(UUID artworkId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Auction> findWithLockById(UUID id);
