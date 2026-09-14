@@ -17,45 +17,23 @@ public class MarketplaceController {
     public MarketplaceController(MarketplaceService service) { this.service = service; }
 
     @GetMapping("/listings")
-    public Page<MarketplaceDtos.ListingResponse> listings(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "24") int size) {
-        return service.listActive(page, size);
-    }
+    public Page<MarketplaceDtos.ListingResponse> listings(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size) { return service.listActive(page, size); }
 
     @GetMapping("/listings/{id}")
-    public MarketplaceDtos.ListingResponse listing(@PathVariable UUID id) {
-        return service.getListing(id);
-    }
+    public MarketplaceDtos.ListingResponse listing(@PathVariable UUID id) { return service.getListing(id); }
 
     @PostMapping("/listings/{artworkId}")
-    public MarketplaceDtos.ListingResponse createListing(
-            @PathVariable UUID artworkId,
-            @Valid @RequestBody MarketplaceDtos.CreateListingRequest request,
-            @AuthenticationPrincipal User user) {
-        return service.createListing(artworkId, request, user);
-    }
+    public MarketplaceDtos.ListingResponse createListing(@PathVariable UUID artworkId, @Valid @RequestBody MarketplaceDtos.CreateListingRequest request, @AuthenticationPrincipal User user) { return service.createListing(artworkId, request, user); }
 
     @DeleteMapping("/listings/{id}")
-    public ResponseEntity<Void> cancelListing(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal User user) {
-        service.cancelListing(id, user);
-        return ResponseEntity.noContent().build();
-    }
+    public ResponseEntity<Void> cancelListing(@PathVariable UUID id, @AuthenticationPrincipal User user) { service.cancelListing(id, user); return ResponseEntity.noContent().build(); }
 
     @PostMapping("/orders/{listingId}")
-    public MarketplaceDtos.OrderResponse createOrder(
-            @PathVariable UUID listingId,
-            @AuthenticationPrincipal User user) {
-        return service.createOrder(listingId, user);
-    }
+    public MarketplaceDtos.OrderResponse createOrder(@PathVariable UUID listingId, @AuthenticationPrincipal User user) { return service.createOrder(listingId, user); }
+
+    @PostMapping("/orders/{orderId}/pay")
+    public MarketplaceDtos.OrderResponse completePayment(@PathVariable UUID orderId, @Valid @RequestBody PaymentRequest request, @AuthenticationPrincipal User user) { return service.completePayment(orderId, request, user); }
 
     @GetMapping("/orders/me")
-    public Page<MarketplaceDtos.OrderResponse> myOrders(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @AuthenticationPrincipal User user) {
-        return service.myOrders(user, page, size);
-    }
+    public Page<MarketplaceDtos.OrderResponse> myOrders(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, @AuthenticationPrincipal User user) { return service.myOrders(user, page, size); }
 }
