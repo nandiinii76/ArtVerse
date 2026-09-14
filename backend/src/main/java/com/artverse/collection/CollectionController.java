@@ -34,6 +34,13 @@ public class CollectionController {
         return service.get(id, user);
     }
 
+    @PatchMapping("/{id}")
+    public CollectionDtos.Response update(@PathVariable UUID id,
+                                           @Valid @RequestBody CollectionDtos.UpdateRequest request,
+                                           @AuthenticationPrincipal User user) {
+        return service.update(id, request, user);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id, @AuthenticationPrincipal User user) {
         service.delete(id, user);
@@ -61,5 +68,17 @@ public class CollectionController {
                                                @AuthenticationPrincipal User user) {
         service.removeArtwork(id, artworkId, user);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/public/{id}")
+    public CollectionDtos.Response publicCollection(@PathVariable UUID id) {
+        return service.publicCollection(id);
+    }
+
+    @GetMapping("/public/{id}/artworks")
+    public Page<CollectionDtos.ArtworkResponse> publicArtworks(@PathVariable UUID id,
+                                                                @RequestParam(defaultValue = "0") int page,
+                                                                @RequestParam(defaultValue = "24") int size) {
+        return service.publicArtworks(id, page, size);
     }
 }
