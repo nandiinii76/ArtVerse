@@ -1,5 +1,7 @@
 package com.artverse.notification;
 
+import com.artverse.social.Follow;
+import com.artverse.social.FollowRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,9 +12,18 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class NotificationEventService {
     private final NotificationService notifications;
+    private final FollowRepository follows;
+
     public void favorite(UUID artistId, UUID actorId, String artworkTitle) { if (!same(artistId, actorId)) notifications.create(artistId,"ARTWORK_FAVORITED","Artwork saved","Someone saved your artwork \""+artworkTitle+"\"."); }
     public void comment(UUID artistId, UUID actorId, String artworkTitle) { if (!same(artistId, actorId)) notifications.create(artistId,"ARTWORK_COMMENTED","New comment","Someone commented on your artwork \""+artworkTitle+"\"."); }
     public void follow(UUID artistId, UUID followerId) { if (!same(artistId, followerId)) notifications.create(artistId,"NEW_FOLLOWER","New follower","Someone started following your work."); }
+    public void newArtwork(UUID artistId, String artworkTitle) {
+        for (Follow follow : follows.findAllByIdFollowingId(artistId)) {
+            UUID followerId = follow.getId().getFollowerId();
+            notifications.create(followerId, "NEW_ARTWORK", "New artwork published",
+                    "A new artwork, \"" + artworkTitle + "\", has been added to an artist you follow.");
+        }
+    }
     public void auctionBid(UUID sellerId, UUID bidderId, String artworkTitle) { if (!same(sellerId, bidderId)) notifications.create(sellerId,"AUCTION_BID","New auction bid","A new bid was placed on \""+artworkTitle+"\"."); }
     public void auctionWon(UUID winnerId, String artworkTitle) { notifications.create(winnerId,"AUCTION_WON","Auction won","You won the auction for \""+artworkTitle+"\". A payment order is ready."); }
     public void auctionPaymentDue(UUID winnerId, String artworkTitle, BigDecimal amount, String currency) { notifications.create(winnerId,"AUCTION_PAYMENT_DUE","Auction payment due","Complete payment for \""+artworkTitle+"\" — "+currency+" "+amount+"."); }
