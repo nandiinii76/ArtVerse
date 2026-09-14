@@ -10,12 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,11 +21,14 @@ public class MediaService {
     private static final List<String> ALLOWED_TYPES = List.of("image/jpeg", "image/png", "image/webp");
     private final MediaAssetRepository assets;
     private final ArtworkRepository artworks;
-    private final Path root;
+    private final LocalMediaStorage localStorage;
+    private final CloudinaryMediaStorage cloudinaryStorage;
+    private final String provider;
 
-    public MediaService(MediaAssetRepository assets, ArtworkRepository artworks,
-                        @Value("${artverse.media.storage-dir:./data/media}") String storageDir) {
-        this.assets = assets; this.artworks = artworks; this.root = Paths.get(storageDir).toAbsolutePath().normalize();
+    public MediaService(MediaAssetRepository assets, ArtworkRepository artworks, LocalMediaStorage localStorage,
+                        CloudinaryMediaStorage cloudinaryStorage, @Value("${artverse.media.provider:local}") String provider) {
+        this.assets = assets; this.artworks = artworks; this.localStorage = localStorage; this.cloudinaryStorage = cloudinaryStorage;
+        this.provider = provider.toLowerCase();
     }
 
     public MediaDtos.Response upload(UUID artworkId, MultipartFile file, User user) {
@@ -44,34 +41,24 @@ public class MediaService {
         String original = StringUtils.cleanPath(file.getOriginalFilename() == null ? "artwork" : file.getOriginalFilename());
         if (original.contains("..")) throw new ResponseStatusException(BAD_REQUEST, "Invalid filename");
         UUID id = UUID.randomUUID();
-        String extension = contentType.equalsIgnoreCase("image/png") ? ".png" : contentType.equalsIgnoreCase("image/webp") ? ".webp" : ".jpg";
-        String key = artworkId + "/" + id + extension;
-        Path destination = root.resolve(key).normalize();
         try {
-            if (!destination.startsWith(root)) throw new ResponseStatusException(BAD_REQUEST, "Invalid storage path");
-            Files.createDirectories(destination.getParent());
-            try (InputStream input = file.getInputStream()) { Files.copy(input, destination, StandardCopyOption.REPLACE_EXISTING); }
-            MediaAsset asset = new MediaAsset(); asset.setId(id); asset.setArtworkId(artworkId); asset.setOwnerId(user.getId());
-            asset.setOriginalName(original); asset.setStorageKey(key); asset.setContentType(contentType); asset.setFileSize(file.getSize()); asset.setChecksum(sha256(destination));
-            assets.save(asset); artwork.setImageUrl("/api/v1/media/" + id); artworks.save(artwork);
+            MediaStorage storage = "cloudinary".equals(provider) ? cloudinaryStorage : localStorage;
+            MediaStorage.StoredMedia stored = storage.store(file, "artverse/artworks/" + artworkId, id.toString());
+            MediaAsset asset = new MediaAsset();
+            asset.setId(id); asset.setArtworkId(artworkId); asset.setOwnerId(user.getId());
+            asset.setOriginalName(original); asset.setStorageKey(stored.storageKey()); asset.setProvider("cloudinary".equals(provider) ? "cloudinary" : "local");
+            asset.setResourceUrl(stored.url()); asset.setContentType(contentType); asset.setFileSize(file.getSize()); asset.setChecksum(stored.checksum());
+            assets.save(asset);
+            artwork.setImageUrl(stored.url()); artworks.save(artwork);
             return MediaDtos.Response.from(asset);
         } catch (IOException e) {
-            try { Files.deleteIfExists(destination); } catch (IOException ignored) {}
             throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "Could not store image", e);
         }
     }
 
     public MediaAsset get(UUID id) { return assets.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Media not found")); }
-    public Path path(MediaAsset asset) {
-        Path path = root.resolve(asset.getStorageKey()).normalize();
-        if (!path.startsWith(root)) throw new ResponseStatusException(BAD_REQUEST, "Invalid media path");
-        return path;
-    }
-    private static String sha256(Path path) throws IOException {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            try (InputStream input = Files.newInputStream(path)) { byte[] buffer = new byte[8192]; int read; while ((read = input.read(buffer)) != -1) digest.update(buffer, 0, read); }
-            StringBuilder result = new StringBuilder(); for (byte b : digest.digest()) result.append(String.format("%02x", b)); return result.toString();
-        } catch (Exception e) { throw new IOException("Could not calculate checksum", e); }
+    public java.nio.file.Path localPath(MediaAsset asset) {
+        if (!"local".equals(asset.getProvider())) throw new ResponseStatusException(NOT_FOUND, "Cloud media is served directly by its provider");
+        return localStorage.path(asset.getStorageKey());
     }
 }
