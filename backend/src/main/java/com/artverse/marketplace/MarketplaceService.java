@@ -29,21 +29,12 @@ public class MarketplaceService {
     @Transactional
     public MarketplaceDtos.ListingResponse createListing(UUID artworkId, MarketplaceDtos.CreateListingRequest request, User seller) {
         Artwork artwork = artwork(artworkId);
-        if (!artwork.getArtistId().equals(seller.getId()))
-            throw new ApiException(HttpStatus.FORBIDDEN, "NOT_OWNER", "Only the artwork owner can create a listing");
-        if (artwork.getStatus() != ArtworkStatus.PUBLISHED)
-            throw ApiException.conflict("ARTWORK_NOT_SELLABLE", "Only published artworks can be listed");
-        if (request.price().compareTo(BigDecimal.ZERO) <= 0)
-            throw ApiException.conflict("INVALID_PRICE", "Listing price must be greater than zero");
-        if (listings.findByArtworkId(artworkId).filter(l -> l.getStatus() == ListingStatus.ACTIVE).isPresent())
-            throw ApiException.conflict("ALREADY_LISTED", "This artwork is already listed");
-
+        if (!artwork.getArtistId().equals(seller.getId())) throw new ApiException(HttpStatus.FORBIDDEN, "NOT_OWNER", "Only the artwork owner can create a listing");
+        if (artwork.getStatus() != ArtworkStatus.PUBLISHED) throw ApiException.conflict("ARTWORK_NOT_SELLABLE", "Only published artworks can be listed");
+        if (request.price().compareTo(BigDecimal.ZERO) <= 0) throw ApiException.conflict("INVALID_PRICE", "Listing price must be greater than zero");
+        if (listings.findByArtworkId(artworkId).filter(l -> l.getStatus() == ListingStatus.ACTIVE).isPresent()) throw ApiException.conflict("ALREADY_LISTED", "This artwork is already listed");
         MarketplaceListing listing = listings.findByArtworkId(artworkId).orElseGet(MarketplaceListing::new);
-        listing.setArtworkId(artworkId);
-        listing.setSellerId(seller.getId());
-        listing.setPrice(request.price());
-        listing.setCurrency(normalizeCurrency(request.currency()));
-        listing.setStatus(ListingStatus.ACTIVE);
+        listing.setArtworkId(artworkId); listing.setSellerId(seller.getId()); listing.setPrice(request.price()); listing.setCurrency(normalizeCurrency(request.currency())); listing.setStatus(ListingStatus.ACTIVE);
         return MarketplaceDtos.ListingResponse.from(listings.save(listing));
     }
 
@@ -53,39 +44,51 @@ public class MarketplaceService {
     }
 
     public MarketplaceDtos.ListingResponse getListing(UUID id) {
-        return MarketplaceDtos.ListingResponse.from(listings.findById(id)
-                .orElseThrow(() -> ApiException.notFound("LISTING_NOT_FOUND", "Marketplace listing not found")));
+        return MarketplaceDtos.ListingResponse.from(listings.findById(id).orElseThrow(() -> ApiException.notFound("LISTING_NOT_FOUND", "Marketplace listing not found")));
     }
 
     @Transactional
     public void cancelListing(UUID id, User seller) {
         MarketplaceListing listing = listing(id);
-        if (!listing.getSellerId().equals(seller.getId()))
-            throw new ApiException(HttpStatus.FORBIDDEN, "NOT_SELLER", "Only the seller can cancel this listing");
-        if (listing.getStatus() != ListingStatus.ACTIVE)
-            throw ApiException.conflict("LISTING_NOT_ACTIVE", "This listing is no longer active");
-        listing.setStatus(ListingStatus.CANCELLED);
-        listings.save(listing);
+        if (!listing.getSellerId().equals(seller.getId())) throw new ApiException(HttpStatus.FORBIDDEN, "NOT_SELLER", "Only the seller can cancel this listing");
+        if (listing.getStatus() != ListingStatus.ACTIVE) throw ApiException.conflict("LISTING_NOT_ACTIVE", "This listing is no longer active");
+        listing.setStatus(ListingStatus.CANCELLED); listings.save(listing);
     }
 
     @Transactional
     public MarketplaceDtos.OrderResponse createOrder(UUID listingId, User buyer) {
-        MarketplaceListing listing = listings.findWithLockById(listingId)
-                .orElseThrow(() -> ApiException.notFound("LISTING_NOT_FOUND", "Marketplace listing not found"));
-        if (listing.getStatus() != ListingStatus.ACTIVE)
-            throw ApiException.conflict("LISTING_NOT_ACTIVE", "This artwork is no longer available");
-        if (listing.getSellerId().equals(buyer.getId()))
-            throw ApiException.conflict("SELF_PURCHASE", "You cannot purchase your own artwork");
-
-        Order order = new Order();
-        order.setBuyerId(buyer.getId());
-        order.setArtworkId(listing.getArtworkId());
-        order.setAmount(listing.getPrice());
-        order.setCurrency(listing.getCurrency());
-        order.setStatus(OrderStatus.PENDING);
+        MarketplaceListing listing = listings.findWithLockById(listingId).orElseThrow(() -> ApiException.notFound("LISTING_NOT_FOUND", "Marketplace listing not found"));
+        if (listing.getStatus() != ListingStatus.ACTIVE) throw ApiException.conflict("LISTING_NOT_ACTIVE", "This artwork is no longer available");
+        if (listing.getSellerId().equals(buyer.getId())) throw ApiException.conflict("SELF_PURCHASE", "You cannot purchase your own artwork");
+        Order order = new Order(); order.setBuyerId(buyer.getId()); order.setArtworkId(listing.getArtworkId()); order.setAmount(listing.getPrice()); order.setCurrency(listing.getCurrency()); order.setStatus(OrderStatus.PENDING);
         Order saved = orders.save(order);
         Artwork artwork = artwork(listing.getArtworkId());
         notificationEvents.marketplaceOrder(listing.getSellerId(), buyer.getId(), artwork.getTitle());
+        return MarketplaceDtos.OrderResponse.from(saved);
+    }
+
+    @Transactional
+    public MarketplaceDtos.OrderResponse completePayment(UUID orderId, PaymentRequest request, User buyer) {
+        Order order = orders.findById(orderId).orElseThrow(() -> ApiException.notFound("ORDER_NOT_FOUND", "Order not found"));
+        if (!order.getBuyerId().equals(buyer.getId())) throw new ApiException(HttpStatus.FORBIDDEN, "NOT_BUYER", "Only the buyer can complete this order");
+        if (order.getStatus() != OrderStatus.PENDING) throw ApiException.conflict("ORDER_NOT_PENDING", "Only pending orders can be paid");
+
+        MarketplaceListing listing = listings.findByArtworkId(order.getArtworkId()).orElseThrow(() -> ApiException.notFound("LISTING_NOT_FOUND", "Marketplace listing not found"));
+        if (listing.getStatus() != ListingStatus.ACTIVE) throw ApiException.conflict("LISTING_NOT_ACTIVE", "This artwork is no longer available");
+        if (!listing.getSellerId().equals(artwork(order.getArtworkId()).getArtistId())) throw ApiException.conflict("LISTING_OWNER_CHANGED", "The listing owner no longer matches the artwork owner");
+
+        order.setStatus(OrderStatus.PAID);
+        order.setPaymentReference(request.paymentReference().trim());
+        listing.setStatus(ListingStatus.SOLD);
+
+        ArtworkOwnership transfer = new ArtworkOwnership();
+        transfer.setArtworkId(order.getArtworkId());
+        transfer.setOwnerId(buyer.getId());
+        transfer.setTransactionId(order.getId());
+        ownership.save(transfer);
+
+        Order saved = orders.save(order);
+        notificationEvents.marketplaceOrderPaid(listing.getSellerId(), buyer.getId(), artwork(order.getArtworkId()).getTitle());
         return MarketplaceDtos.OrderResponse.from(saved);
     }
 
@@ -94,15 +97,7 @@ public class MarketplaceService {
         return orders.findByBuyerIdOrderByCreatedAtDesc(buyer.getId(), pageable).map(MarketplaceDtos.OrderResponse::from);
     }
 
-    private MarketplaceListing listing(UUID id) {
-        return listings.findById(id).orElseThrow(() -> ApiException.notFound("LISTING_NOT_FOUND", "Marketplace listing not found"));
-    }
-
-    private Artwork artwork(UUID id) {
-        return artworks.findById(id).orElseThrow(() -> ApiException.notFound("ARTWORK_NOT_FOUND", "Artwork not found"));
-    }
-
-    private String normalizeCurrency(String currency) {
-        return currency == null || currency.isBlank() ? "INR" : currency.trim().toUpperCase();
-    }
+    private MarketplaceListing listing(UUID id) { return listings.findById(id).orElseThrow(() -> ApiException.notFound("LISTING_NOT_FOUND", "Marketplace listing not found")); }
+    private Artwork artwork(UUID id) { return artworks.findById(id).orElseThrow(() -> ApiException.notFound("ARTWORK_NOT_FOUND", "Artwork not found")); }
+    private String normalizeCurrency(String currency) { return currency == null || currency.isBlank() ? "INR" : currency.trim().toUpperCase(); }
 }
