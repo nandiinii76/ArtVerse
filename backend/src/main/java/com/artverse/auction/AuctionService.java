@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -24,6 +25,7 @@ public class AuctionService {
     private final BidRepository bids;
     private final ArtworkRepository artworks;
     private final NotificationEventService notificationEvents;
+    private final SimpMessagingTemplate messaging;
 
     @Transactional
     public AuctionDtos.Response create(UUID artworkId, AuctionDtos.CreateRequest r, User seller) {
@@ -55,8 +57,10 @@ public class AuctionService {
         if (r.amount().compareTo(minimum) < 0) throw ApiException.conflict("BID_TOO_LOW", "Bid must be at least " + minimum);
         Bid b = new Bid(); b.setAuctionId(a.getId()); b.setBidderId(bidder.getId()); b.setAmount(r.amount()); a.setCurrentPrice(r.amount()); auctions.save(a);
         Bid saved = bids.save(b);
+        AuctionDtos.BidResponse response = AuctionDtos.BidResponse.from(saved);
+        messaging.convertAndSend("/topic/auctions/" + a.getId(), response);
         artworks.findById(a.getArtworkId()).ifPresent(work -> notificationEvents.auctionBid(a.getSellerId(), bidder.getId(), work.getTitle()));
-        return AuctionDtos.BidResponse.from(saved);
+        return response;
     }
 
     public Page<AuctionDtos.BidResponse> bids(UUID id, int page, int size) {
@@ -72,7 +76,9 @@ public class AuctionService {
         if (a.getStatus() == AuctionStatus.ENDED) return AuctionDtos.Response.from(a);
         if (a.getStatus() != AuctionStatus.LIVE || Instant.now().isBefore(a.getEndsAt())) throw ApiException.conflict("AUCTION_NOT_READY", "Auction can only be closed after its end time");
         finish(a);
-        return AuctionDtos.Response.from(auctions.save(a));
+        AuctionDtos.Response response = AuctionDtos.Response.from(auctions.save(a));
+        messaging.convertAndSend("/topic/auctions/" + a.getId(), response);
+        return response;
     }
 
     private Auction sync(Auction a) {
