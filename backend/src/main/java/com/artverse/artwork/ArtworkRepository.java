@@ -11,6 +11,7 @@ import java.util.UUID;
 public interface ArtworkRepository extends JpaRepository<Artwork, UUID> {
     Page<Artwork> findByStatus(ArtworkStatus status, Pageable pageable);
     Page<Artwork> findByArtistIdAndStatus(UUID artistId, ArtworkStatus status, Pageable pageable);
+    long countByArtistIdAndStatus(UUID artistId, ArtworkStatus status);
 
     @Query("select a from Artwork a where a.status = :status and " +
            "(:q is null or lower(a.title) like lower(concat('%', :q, '%')) " +
