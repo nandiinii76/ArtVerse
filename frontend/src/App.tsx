@@ -12,6 +12,7 @@ import { CuratorPage } from '@/pages/CuratorPage'
 import { AuctionsPage } from '@/pages/AuctionsPage'
 import { CollectionsPage } from '@/pages/CollectionsPage'
 import { NotificationsPage } from '@/pages/NotificationsPage'
+import { MarketplacePage } from '@/pages/MarketplacePage'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
     <Route path="/museum" element={<MuseumPage />} />
     <Route path="/curator" element={<CuratorPage />} />
     <Route path="/auctions" element={<AuctionsPage />} />
+    <Route path="/marketplace" element={<MarketplacePage />} />
     <Route path="/artworks/:id" element={<ArtworkPage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
