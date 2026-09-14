@@ -23,12 +23,12 @@ public final class MarketplaceDtos {
     }
 
     public record OrderResponse(
-            UUID id, UUID buyerId, UUID artworkId, BigDecimal amount,
-            String currency, OrderStatus status, String paymentReference,
+            UUID id, UUID buyerId, UUID sellerId, UUID artworkId, UUID auctionId,
+            BigDecimal amount, String currency, OrderStatus status, String paymentReference,
             Instant createdAt, Instant updatedAt) {
         static OrderResponse from(Order o) {
-            return new OrderResponse(o.getId(), o.getBuyerId(), o.getArtworkId(), o.getAmount(),
-                    o.getCurrency(), o.getStatus(), o.getPaymentReference(), o.getCreatedAt(), o.getUpdatedAt());
+            return new OrderResponse(o.getId(), o.getBuyerId(), o.getSellerId(), o.getArtworkId(), o.getAuctionId(),
+                    o.getAmount(), o.getCurrency(), o.getStatus(), o.getPaymentReference(), o.getCreatedAt(), o.getUpdatedAt());
         }
     }
 }
