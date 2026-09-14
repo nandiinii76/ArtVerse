@@ -1,6 +1,7 @@
 package com.artverse.artwork;
 
 import com.artverse.notification.NotificationEventService;
+import com.artverse.search.ArtworkSearchService;
 import com.artverse.user.User;
 import com.artverse.user.UserRepository;
 import org.springframework.data.domain.Page;
@@ -15,11 +16,14 @@ public class ArtworkService {
     private final ArtworkRepository repository;
     private final UserRepository users;
     private final NotificationEventService notifications;
+    private final ArtworkSearchService searchService;
 
-    public ArtworkService(ArtworkRepository repository, UserRepository users, NotificationEventService notifications) {
+    public ArtworkService(ArtworkRepository repository, UserRepository users, NotificationEventService notifications,
+                           ArtworkSearchService searchService) {
         this.repository = repository;
         this.users = users;
         this.notifications = notifications;
+        this.searchService = searchService;
     }
 
     public ArtworkDtos.Response create(ArtworkDtos.CreateRequest request, User user) {
@@ -27,6 +31,7 @@ public class ArtworkService {
         apply(a, request);
         a.setArtistId(user.getId());
         Artwork saved = repository.save(a);
+        searchService.indexSafely(saved);
         if (saved.getStatus() == ArtworkStatus.PUBLISHED) {
             notifications.newArtwork(saved.getArtistId(), saved.getTitle());
         }
@@ -34,7 +39,11 @@ public class ArtworkService {
     }
 
     public Page<ArtworkDtos.Response> search(String q, String category, Pageable pageable) {
-        return repository.search(blankToNull(q), blankToNull(category), ArtworkStatus.PUBLISHED, pageable).map(ArtworkDtos.Response::from);
+        String cleanQ = blankToNull(q);
+        String cleanCategory = blankToNull(category);
+        Page<ArtworkDtos.Response> indexed = searchService.search(cleanQ, cleanCategory, pageable);
+        if (indexed != null) return indexed;
+        return repository.search(cleanQ, cleanCategory, ArtworkStatus.PUBLISHED, pageable).map(ArtworkDtos.Response::from);
     }
 
     public Page<ArtworkDtos.Response> mine(UUID artistId, Pageable pageable) {
@@ -56,6 +65,7 @@ public class ArtworkService {
         boolean wasPublished = a.getStatus() == ArtworkStatus.PUBLISHED;
         apply(a, request);
         Artwork saved = repository.save(a);
+        searchService.indexSafely(saved);
         if (!wasPublished && saved.getStatus() == ArtworkStatus.PUBLISHED) {
             notifications.newArtwork(saved.getArtistId(), saved.getTitle());
         }
@@ -66,6 +76,7 @@ public class ArtworkService {
         Artwork a = repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Artwork not found"));
         if (!a.getArtistId().equals(user.getId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the artist can delete this artwork");
         repository.delete(a);
+        searchService.delete(id);
     }
 
     private void apply(Artwork a, ArtworkDtos.CreateRequest r) {
