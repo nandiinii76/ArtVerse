@@ -7,4 +7,5 @@ public final class FollowDtos {
 
     public record FollowResponse(UUID followerId, UUID followingId, boolean following) {}
     public record FollowStats(long followers, long following) {}
+    public record FollowerResponse(UUID userId, String displayName, String avatarUrl) {}
 }
