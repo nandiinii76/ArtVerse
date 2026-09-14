@@ -11,6 +11,7 @@ import { MuseumPage } from '@/pages/MuseumPage'
 import { CuratorPage } from '@/pages/CuratorPage'
 import { AuctionsPage } from '@/pages/AuctionsPage'
 import { CollectionsPage } from '@/pages/CollectionsPage'
+import { NotificationsPage } from '@/pages/NotificationsPage'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/studio" element={<StudioPage />} />
       <Route path="/collections" element={<CollectionsPage />} />
+      <Route path="/notifications" element={<NotificationsPage />} />
     </Route>
     <Route path="*" element={<NotFound />} />
   </Routes></div>
