@@ -3,30 +3,14 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    @apply antialiased;
-  }
-  body {
-    @apply bg-paper text-ink font-sans;
-  }
-  h1, h2, h3, h4 {
-    @apply font-serif;
-  }
-  ::selection {
-    @apply bg-oxblood/20;
-  }
+  html { @apply antialiased; scroll-behavior:smooth; }
+  body { @apply bg-paper text-ink font-sans; background-image: radial-gradient(rgba(29,27,24,.035) .7px, transparent .7px); background-size: 7px 7px; }
+  h1,h2,h3,h4 { @apply font-serif; }
+  ::selection { @apply bg-oxblood/20; }
 }
-
 @layer components {
-  .label-meta {
-    @apply text-[11px] uppercase tracking-wideish text-olive;
-  }
-  .btn-outline {
-    @apply inline-flex items-center gap-2 border border-ink/60 px-5 py-2.5 text-sm tracking-wide
-           hover:border-oxblood hover:text-oxblood transition-colors duration-300;
-  }
-  .field {
-    @apply w-full border-b border-ink/30 bg-transparent py-2 text-base
-           placeholder:text-ink/40 focus:border-oxblood focus:outline-none transition-colors;
-  }
+  .label-meta { @apply text-[11px] uppercase tracking-[0.16em] text-olive; }
+  .btn-outline { @apply inline-flex items-center gap-2 border border-ink/50 px-5 py-2.5 text-[11px] uppercase tracking-[0.12em] hover:border-oxblood hover:text-oxblood transition-colors duration-300; }
+  .field { @apply w-full border-b border-ink/30 bg-transparent py-3 text-base placeholder:text-ink/40 focus:border-oxblood focus:outline-none transition-colors; }
+  .museum-card { @apply border border-ink/10 bg-paper shadow-[0_12px_40px_rgba(29,27,24,.07)] transition duration-500 hover:-translate-y-1 hover:shadow-[0_20px_55px_rgba(29,27,24,.11)]; }
 }
