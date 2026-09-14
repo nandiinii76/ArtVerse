@@ -6,6 +6,7 @@ import { RegisterPage } from '@/pages/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { ExplorePage } from '@/pages/ExplorePage'
 import { ArtworkPage } from '@/pages/ArtworkPage'
+import { ArtistPage } from '@/pages/ArtistPage'
 import { StudioPage } from '@/pages/StudioPage'
 import { MuseumPage } from '@/pages/MuseumPage'
 import { CuratorPage } from '@/pages/CuratorPage'
@@ -26,6 +27,7 @@ export default function App() {
     <Route path="/auctions/:id" element={<AuctionDetailPage />} />
     <Route path="/marketplace" element={<MarketplacePage />} />
     <Route path="/artworks/:id" element={<ArtworkPage />} />
+    <Route path="/artists/:id" element={<ArtistPage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
     <Route element={<ProtectedRoute />}>
