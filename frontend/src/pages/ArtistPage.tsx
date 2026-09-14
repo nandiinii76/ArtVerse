@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api, extractErrorMessage } from '@/lib/api'
+import { useAuthStore } from '@/store/authStore'
 
 type Artist = {
   userId: string
@@ -29,29 +30,69 @@ type Artwork = {
 }
 
 type Page<T> = { content?: T[] }
+type FollowResponse = { followerId: string; followingId: string; following: boolean }
 
 export function ArtistPage() {
   const { id } = useParams()
+  const currentUser = useAuthStore((state) => state.user)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const [artist, setArtist] = useState<Artist | null>(null)
   const [works, setWorks] = useState<Artwork[]>([])
+  const [following, setFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!id) return
     setLoading(true)
-    Promise.all([
+    setError('')
+    const requests = [
       api.get<Artist>(`/artists/${id}`),
       api.get<Page<Artwork>>(`/artists/${id}/artworks`, { params: { page: 0, size: 24 } }),
-    ]).then(([profile, portfolio]) => {
+    ]
+
+    Promise.all(requests).then(([profile, portfolio]) => {
       setArtist(profile.data)
       setWorks(portfolio.data.content ?? [])
     }).catch((e) => setError(extractErrorMessage(e)))
       .finally(() => setLoading(false))
   }, [id])
 
+  useEffect(() => {
+    if (!id || !isAuthenticated || currentUser?.id === id) {
+      setFollowing(false)
+      return
+    }
+    api.get<FollowResponse>(`/social/follows/${id}`)
+      .then((response) => setFollowing(response.data.following))
+      .catch(() => setFollowing(false))
+  }, [id, isAuthenticated, currentUser?.id])
+
+  async function toggleFollow() {
+    if (!id || !artist || !isAuthenticated || followLoading) return
+    setFollowLoading(true)
+    try {
+      if (following) {
+        await api.delete(`/social/follows/${id}`)
+        setFollowing(false)
+        setArtist((current) => current ? { ...current, followerCount: Math.max(0, current.followerCount - 1) } : current)
+      } else {
+        const response = await api.post<FollowResponse>(`/social/follows/${id}`)
+        setFollowing(response.data.following)
+        setArtist((current) => current ? { ...current, followerCount: current.followerCount + 1 } : current)
+      }
+    } catch (e) {
+      setError(extractErrorMessage(e, 'Unable to update follow status.'))
+    } finally {
+      setFollowLoading(false)
+    }
+  }
+
   if (loading) return <main className="mx-auto max-w-6xl px-6 py-24 text-center text-ink/60">Opening the artist's gallery…</main>
   if (error || !artist) return <main className="mx-auto max-w-4xl px-6 py-24 text-center"><p className="label-meta">Gallery unavailable</p><p className="mt-3 text-ink/60">{error || 'Artist not found.'}</p></main>
+
+  const isOwnProfile = currentUser?.id === artist.userId
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-14">
@@ -63,7 +104,14 @@ export function ArtistPage() {
           </div>
           <div>
             <p className="label-meta">Artist Archive</p>
-            <h1 className="mt-2 font-serif text-4xl md:text-6xl">{artist.displayName}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-4">
+              <h1 className="font-serif text-4xl md:text-6xl">{artist.displayName}</h1>
+              {isAuthenticated && !isOwnProfile && (
+                <button type="button" onClick={toggleFollow} disabled={followLoading} className="btn-outline disabled:cursor-not-allowed disabled:opacity-50">
+                  {followLoading ? 'Updating…' : following ? 'Following' : 'Follow artist'}
+                </button>
+              )}
+            </div>
             {artist.verified && <span className="mt-4 inline-block border border-olive/40 px-3 py-1 text-[10px] uppercase tracking-[.18em] text-olive">Verified Artist</span>}
             {artist.biography && <p className="mt-6 max-w-3xl text-lg leading-8 text-ink/70">{artist.biography}</p>}
             <div className="mt-7 flex flex-wrap gap-7 text-sm text-ink/60">
@@ -71,11 +119,11 @@ export function ArtistPage() {
               <span><strong className="font-serif text-xl text-ink">{artist.followerCount}</strong> followers</span>
               {artist.location && <span>{artist.location}</span>}
             </div>
+            {!isAuthenticated && <p className="mt-5 text-xs uppercase tracking-[.14em] text-ink/40">Sign in to follow this artist</p>}
             {artist.websiteUrl && <a href={artist.websiteUrl} target="_blank" rel="noreferrer" className="mt-5 inline-block text-sm text-oxblood underline underline-offset-4">Visit artist website</a>}
           </div>
         </div>
       </section>
-
       <section className="mt-16">
         <div className="mb-8 flex items-end justify-between border-b border-ink/15 pb-4">
           <div><p className="label-meta">Selected works</p><h2 className="mt-1 font-serif text-3xl">The Artist's Collection</h2></div>
