@@ -20,12 +20,12 @@ public class FavoriteController {
 
     @DeleteMapping("/{artworkId}")
     public ResponseEntity<Void> remove(@PathVariable UUID artworkId, @AuthenticationPrincipal User user) {
-        repository.deleteByArtworkIdAndUserId(artworkId, user.getId());
+        repository.deleteByIdArtworkIdAndIdUserId(artworkId, user.getId());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{artworkId}")
     public boolean isFavorite(@PathVariable UUID artworkId, @AuthenticationPrincipal User user) {
-        return repository.existsByArtworkIdAndUserId(artworkId, user.getId());
+        return repository.existsByIdArtworkIdAndIdUserId(artworkId, user.getId());
     }
 }
