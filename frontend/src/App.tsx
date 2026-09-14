@@ -7,13 +7,23 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { ExplorePage } from '@/pages/ExplorePage'
 import { ArtworkPage } from '@/pages/ArtworkPage'
 import { StudioPage } from '@/pages/StudioPage'
+import { MuseumPage } from '@/pages/MuseumPage'
+import { CuratorPage } from '@/pages/CuratorPage'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 
 export default function App() {
   return <div className="min-h-screen bg-paper text-ink"><Header /><Routes>
-    <Route path="/" element={<HomePage />} /><Route path="/explore" element={<ExplorePage />} />
-    <Route path="/artworks/:id" element={<ArtworkPage />} /><Route path="/login" element={<LoginPage />} /><Route path="/register" element={<RegisterPage />} />
-    <Route element={<ProtectedRoute />}><Route path="/dashboard" element={<DashboardPage />} /><Route path="/studio" element={<StudioPage />} /></Route>
+    <Route path="/" element={<HomePage />} />
+    <Route path="/explore" element={<ExplorePage />} />
+    <Route path="/museum" element={<MuseumPage />} />
+    <Route path="/curator" element={<CuratorPage />} />
+    <Route path="/artworks/:id" element={<ArtworkPage />} />
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/register" element={<RegisterPage />} />
+    <Route element={<ProtectedRoute />}>
+      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/studio" element={<StudioPage />} />
+    </Route>
     <Route path="*" element={<NotFound />} />
   </Routes></div>
 }
