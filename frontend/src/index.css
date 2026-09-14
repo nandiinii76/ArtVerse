@@ -13,4 +13,32 @@
   .btn-outline { @apply inline-flex items-center gap-2 border border-ink/50 px-5 py-2.5 text-[11px] uppercase tracking-[0.12em] hover:border-oxblood hover:text-oxblood transition-colors duration-300; }
   .field { @apply w-full border-b border-ink/30 bg-transparent py-3 text-base placeholder:text-ink/40 focus:border-oxblood focus:outline-none transition-colors; }
   .museum-card { @apply border border-ink/10 bg-paper shadow-[0_12px_40px_rgba(29,27,24,.07)] transition duration-500 hover:-translate-y-1 hover:shadow-[0_20px_55px_rgba(29,27,24,.11)]; }
+  .museum-control { @apply border border-ink/25 px-4 py-2 text-[10px] uppercase tracking-[.14em] transition hover:border-oxblood hover:text-oxblood; }
+  .room-pill { @apply border border-ink/15 px-4 py-2 text-[10px] uppercase tracking-[.1em] transition hover:border-oxblood hover:text-oxblood; }
+  .room-pill.active { @apply border-oxblood bg-oxblood text-paper; }
 }
+
+.museum-stage {
+  position: relative;
+  height: 620px;
+  overflow: hidden;
+  perspective: 1100px;
+  background: linear-gradient(#d9cfbd 0%, #c9bda9 63%, #8c7761 64%, #5f4b3b 100%);
+  border: 1px solid rgba(29,27,24,.22);
+  box-shadow: inset 0 0 100px rgba(29,27,24,.18), 0 24px 60px rgba(29,27,24,.13);
+}
+.museum-wall { position:absolute; inset:70px 90px 125px; transform:rotateX(3deg) translateZ(0); background:#d7ccb9; border:12px solid #75634e; box-shadow:inset 0 0 0 2px #a89172, inset 0 0 60px rgba(29,27,24,.12); }
+.museum-floor { position:absolute; left:-10%; right:-10%; bottom:-210px; height:360px; transform:rotateX(63deg); transform-origin:center top; background:repeating-linear-gradient(90deg, #8d765d 0 70px, #7d664f 71px 74px); box-shadow:inset 0 20px 45px rgba(29,27,24,.3); }
+.museum-ceiling { position:absolute; left:8%; right:8%; top:-110px; height:230px; transform:rotateX(-63deg); background:#bcae98; border-bottom:14px double #6d5a46; }
+.museum-column { position:absolute; top:80px; bottom:90px; width:58px; background:linear-gradient(90deg,#665341,#b59a75,#705b46); box-shadow:0 0 20px rgba(29,27,24,.25); }
+.column-left { left:55px; } .column-right { right:55px; }
+.museum-frame { position:absolute; width:112px; height:160px; padding:8px; background:#a4885d; border:5px solid #765c3d; box-shadow:0 8px 15px rgba(29,27,24,.24); color:#44382d; font:10px Georgia,serif; text-align:center; }
+.museum-art { height:120px; background:radial-gradient(circle at 35% 30%, #d8c9aa 0 13%, transparent 14%), linear-gradient(145deg,#51473d,#a37d58 45%,#d1bd94 46%,#655b52); border:2px solid #3e352d; margin-bottom:5px; }
+.frame-0{left:8%;top:16%;transform:rotateY(9deg)} .frame-1{left:25%;top:10%;transform:rotateY(3deg)} .frame-2{left:43%;top:18%} .frame-3{right:24%;top:10%;transform:rotateY(-3deg)} .frame-4{right:8%;top:17%;transform:rotateY(-9deg)} .frame-5{left:31%;bottom:7%;transform:scale(.75)} .frame-6{right:32%;bottom:7%;transform:scale(.75)}
+.museum-bench { position:absolute; left:50%; bottom:65px; transform:translateX(-50%); width:260px; height:42px; padding:12px; text-align:center; background:#5b4634; color:#d9c9ad; font:10px Georgia,serif; letter-spacing:.18em; box-shadow:0 15px 20px rgba(29,27,24,.25); }
+.is-moving .museum-wall { animation: museum-breathe 12s ease-in-out infinite alternate; }
+.is-moving .museum-frame { animation: frame-float 7s ease-in-out infinite alternate; }
+@keyframes museum-breathe { from { transform:rotateX(3deg) rotateY(-1deg) scale(1); } to { transform:rotateX(4deg) rotateY(1deg) scale(1.025); } }
+@keyframes frame-float { from { translate:0 0; } to { translate:0 -5px; } }
+@media (prefers-reduced-motion: reduce) { .is-moving .museum-wall,.is-moving .museum-frame { animation:none; } }
+@media (max-width: 700px) { .museum-stage{height:470px}.museum-wall{inset:50px 35px 110px}.museum-column{display:none}.museum-frame{width:72px;height:110px;padding:5px}.museum-art{height:78px}.frame-5,.frame-6{display:none} }
