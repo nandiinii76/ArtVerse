@@ -28,6 +28,12 @@ public class Collection {
     @Column(length = 1000)
     private String description;
 
+    @Column(name = "cover_artwork_id")
+    private UUID coverArtworkId;
+
+    @Column(name = "is_public", nullable = false)
+    private boolean publicCollection = true;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
