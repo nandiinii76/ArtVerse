@@ -15,16 +15,6 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP:artverse-events}
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 server:
   port: ${SERVER_PORT:8080}
@@ -44,9 +34,6 @@ artverse:
   search:
     opensearch-url: ${OPENSEARCH_URL:http://localhost:9200}
     opensearch-enabled: ${OPENSEARCH_ENABLED:true}
-  kafka:
-    enabled: ${KAFKA_ENABLED:false}
-    topic: ${KAFKA_TOPIC:artverse.events}
 
 management:
   endpoints:
