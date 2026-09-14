@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-paper text-ink font-sans;
+  }
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+  ::selection {
+    @apply bg-oxblood/20;
+  }
+}
+
+@layer components {
+  .label-meta {
+    @apply text-[11px] uppercase tracking-wideish text-olive;
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 border border-ink/60 px-5 py-2.5 text-sm tracking-wide
+           hover:border-oxblood hover:text-oxblood transition-colors duration-300;
+  }
+  .field {
+    @apply w-full border-b border-ink/30 bg-transparent py-2 text-base
+           placeholder:text-ink/40 focus:border-oxblood focus:outline-none transition-colors;
+  }
+}
