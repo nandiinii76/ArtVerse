@@ -1,5 +1,6 @@
 package com.artverse.social;
 
+import com.artverse.notification.NotificationEventService;
 import com.artverse.user.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -11,8 +12,12 @@ import java.util.UUID;
 @RequestMapping("/api/v1/social/follows")
 public class FollowController {
     private final FollowRepository follows;
+    private final NotificationEventService notifications;
 
-    public FollowController(FollowRepository follows) { this.follows = follows; }
+    public FollowController(FollowRepository follows, NotificationEventService notifications) {
+        this.follows = follows;
+        this.notifications = notifications;
+    }
 
     @PostMapping("/{artistId}")
     public FollowDtos.FollowResponse follow(@PathVariable UUID artistId, @AuthenticationPrincipal User user) {
@@ -20,8 +25,10 @@ public class FollowController {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.CONFLICT, "You cannot follow yourself");
         }
-        if (!follows.existsByIdFollowerIdAndIdFollowingId(user.getId(), artistId)) {
+        boolean alreadyFollowing = follows.existsByIdFollowerIdAndIdFollowingId(user.getId(), artistId);
+        if (!alreadyFollowing) {
             follows.save(new Follow(new FollowId(user.getId(), artistId)));
+            notifications.follow(artistId, user.getId());
         }
         return new FollowDtos.FollowResponse(user.getId(), artistId, true);
     }
