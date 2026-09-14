@@ -41,6 +41,7 @@ public class AuctionService {
     }
 
     public Page<AuctionDtos.Response> list(int page, int size) {
+        syncDueAuctions();
         Pageable p = PageRequest.of(Math.max(page,0), Math.min(Math.max(size,1),50));
         return auctions.findByStatus(AuctionStatus.LIVE, p).map(AuctionDtos.Response::from);
     }
@@ -79,6 +80,26 @@ public class AuctionService {
         AuctionDtos.Response response = AuctionDtos.Response.from(auctions.save(a));
         messaging.convertAndSend("/topic/auctions/" + a.getId(), response);
         return response;
+    }
+
+    @Transactional
+    public void syncDueAuctions() {
+        Instant now = Instant.now();
+        auctions.findByStatus(AuctionStatus.SCHEDULED, PageRequest.of(0, 200)).forEach(a -> {
+            if (!now.isBefore(a.getStartsAt())) {
+                if (now.isBefore(a.getEndsAt())) a.setStatus(AuctionStatus.LIVE);
+                else finish(a);
+                auctions.save(a);
+                messaging.convertAndSend("/topic/auctions/" + a.getId(), AuctionDtos.Response.from(a));
+            }
+        });
+        auctions.findByStatus(AuctionStatus.LIVE, PageRequest.of(0, 200)).forEach(a -> {
+            if (!now.isBefore(a.getEndsAt())) {
+                finish(a);
+                auctions.save(a);
+                messaging.convertAndSend("/topic/auctions/" + a.getId(), AuctionDtos.Response.from(a));
+            }
+        });
     }
 
     private Auction sync(Auction a) {
