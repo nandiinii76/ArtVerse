@@ -9,7 +9,8 @@ export function Header() {
       <Link to="/explore" className="hover:text-oxblood">Explore</Link>
       <Link to="/curator" className="hover:text-oxblood">Curator</Link>
       <Link to="/museum" className="hover:text-oxblood">Museum</Link>
-      <span>Artists</span><span>Exhibitions</span><span>Auctions</span>
+      <Link to="/auctions" className="hover:text-oxblood">Auctions</Link>
+      <span>Artists</span><span>Exhibitions</span>
     </nav>
     <div className="flex items-center gap-5 text-sm">{isAuthenticated?<><Link to="/studio" className="hidden text-ink/65 hover:text-oxblood sm:block">Studio</Link><span className="hidden text-ink/60 lg:inline">{user?.displayName}</span><button onClick={()=>{logout();navigate('/')}} className="btn-outline">Sign out</button></>:<><Link to="/login" className="text-ink/70 hover:text-oxblood">Sign in</Link><Link to="/register" className="btn-outline">Join ARTVERSE</Link></>}</div>
   </div></header>
