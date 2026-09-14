@@ -1,0 +1,114 @@
+import { FormEvent, useEffect, useState } from 'react'
+import { api, extractErrorMessage } from '@/lib/api'
+
+type Collection = {
+  id: string
+  name: string
+  description?: string
+  artworkCount: number
+  createdAt: string
+}
+
+export function CollectionsPage() {
+  const [collections, setCollections] = useState<Collection[]>([])
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function load() {
+    setLoading(true)
+    try {
+      const response = await api.get('/collections', { params: { page: 0, size: 50 } })
+      setCollections(response.data.content ?? [])
+    } catch (e) {
+      setError(extractErrorMessage(e))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  async function create(event: FormEvent) {
+    event.preventDefault()
+    if (!name.trim()) return
+    setSaving(true)
+    setError('')
+    try {
+      await api.post('/collections', { name: name.trim(), description: description.trim() || null })
+      setName('')
+      setDescription('')
+      await load()
+    } catch (e) {
+      setError(extractErrorMessage(e))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function remove(id: string) {
+    try {
+      await api.delete(`/collections/${id}`)
+      setCollections(current => current.filter(item => item.id !== id))
+    } catch (e) {
+      setError(extractErrorMessage(e))
+    }
+  }
+
+  return (
+    <main className="mx-auto max-w-6xl px-6 py-16 md:px-10">
+      <div className="border-b border-ink/15 pb-10">
+        <p className="label-meta">Personal Archive</p>
+        <h1 className="mt-3 text-5xl leading-tight md:text-7xl">Your collections.</h1>
+        <p className="mt-5 max-w-2xl text-ink/60">Gather works that belong together: a private study, a favourite period, or a quiet evening of looking.</p>
+      </div>
+
+      <section className="mt-10 max-w-3xl">
+        <p className="label-meta">Create a collection</p>
+        <form onSubmit={create} className="mt-5 grid gap-4 border border-ink/10 bg-paper p-6 shadow-[0_12px_40px_rgba(29,27,24,.05)]">
+          <input className="field" value={name} onChange={e => setName(e.target.value)} placeholder="Collection name" maxLength={150} />
+          <textarea className="min-h-24 w-full resize-none border-b border-ink/30 bg-transparent py-3 text-base placeholder:text-ink/40 focus:border-oxblood focus:outline-none" value={description} onChange={e => setDescription(e.target.value)} placeholder="A short description (optional)" maxLength={1000} />
+          <div className="flex items-center justify-between gap-4">
+            {error ? <p className="text-sm text-oxblood">{error}</p> : <span />}
+            <button className="btn-outline" disabled={saving}>{saving ? 'Saving…' : 'Create collection'}</button>
+          </div>
+        </form>
+      </section>
+
+      <section className="mt-16">
+        <div className="flex items-end justify-between border-b border-ink/15 pb-4">
+          <p className="label-meta">My archive</p>
+          <span className="text-xs text-ink/45">{collections.length} collection{collections.length === 1 ? '' : 's'}</span>
+        </div>
+
+        {loading ? <p className="py-12 text-sm text-ink/50">Opening the archive…</p> : collections.length === 0 ? (
+          <div className="border border-dashed border-ink/20 px-6 py-16 text-center">
+            <h2 className="font-serif text-3xl">Nothing collected yet.</h2>
+            <p className="mt-3 text-sm text-ink/55">Create your first collection, then add artworks from their detail pages.</p>
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {collections.map(collection => (
+              <article key={collection.id} className="museum-card p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="label-meta">Private collection</p>
+                    <h2 className="mt-3 text-2xl">{collection.name}</h2>
+                  </div>
+                  <span className="font-serif text-2xl text-ink/20">{String(collection.artworkCount).padStart(2, '0')}</span>
+                </div>
+                <p className="mt-5 min-h-12 text-sm leading-6 text-ink/60">{collection.description || 'A personal gathering of works.'}</p>
+                <div className="mt-7 flex items-center justify-between border-t border-ink/10 pt-4">
+                  <span className="text-[10px] uppercase tracking-[0.14em] text-ink/40">{collection.artworkCount} artwork{collection.artworkCount === 1 ? '' : 's'}</span>
+                  <button onClick={() => void remove(collection.id)} className="text-[10px] uppercase tracking-[0.14em] text-ink/45 hover:text-oxblood">Delete</button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
+  )
+}
