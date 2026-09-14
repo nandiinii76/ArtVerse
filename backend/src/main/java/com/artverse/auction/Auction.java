@@ -23,6 +23,7 @@ public class Auction {
     @Column(name = "ends_at", nullable = false) private Instant endsAt;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private AuctionStatus status = AuctionStatus.SCHEDULED;
     @Column(name = "winner_id") private UUID winnerId;
+    @Column(name = "winner_notified", nullable = false) private boolean winnerNotified;
     @Column(nullable = false, updatable = false) private Instant createdAt;
     @PrePersist void onCreate() { createdAt = Instant.now(); }
 }
