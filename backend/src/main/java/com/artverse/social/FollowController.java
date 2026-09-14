@@ -2,21 +2,31 @@ package com.artverse.social;
 
 import com.artverse.notification.NotificationEventService;
 import com.artverse.user.User;
+import com.artverse.user.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/social/follows")
 public class FollowController {
     private final FollowRepository follows;
     private final NotificationEventService notifications;
+    private final UserRepository users;
 
-    public FollowController(FollowRepository follows, NotificationEventService notifications) {
+    public FollowController(FollowRepository follows, NotificationEventService notifications, UserRepository users) {
         this.follows = follows;
         this.notifications = notifications;
+        this.users = users;
     }
 
     @PostMapping("/{artistId}")
@@ -50,5 +60,25 @@ public class FollowController {
         return new FollowDtos.FollowStats(
                 follows.countByIdFollowingId(artistId),
                 follows.countByIdFollowerId(artistId));
+    }
+
+    @GetMapping("/{artistId}/followers")
+    public Page<FollowDtos.FollowerResponse> followers(
+            @PathVariable UUID artistId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "30") int size) {
+        Page<Follow> followPage = follows.findByIdFollowingId(
+                artistId, PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100)));
+        List<UUID> ids = followPage.getContent().stream()
+                .map(f -> f.getId().getFollowerId())
+                .toList();
+        Map<UUID, User> byId = users.findAllById(ids).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+        List<FollowDtos.FollowerResponse> content = ids.stream()
+                .map(byId::get)
+                .filter(u -> u != null)
+                .map(u -> new FollowDtos.FollowerResponse(u.getId(), u.getDisplayName(), u.getAvatarUrl()))
+                .toList();
+        return new PageImpl<>(content, followPage.getPageable(), followPage.getTotalElements());
     }
 }
