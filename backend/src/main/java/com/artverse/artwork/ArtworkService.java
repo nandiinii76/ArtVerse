@@ -1,5 +1,6 @@
 package com.artverse.artwork;
 
+import com.artverse.notification.NotificationEventService;
 import com.artverse.user.User;
 import com.artverse.user.UserRepository;
 import org.springframework.data.domain.Page;
@@ -13,17 +14,23 @@ import java.util.UUID;
 public class ArtworkService {
     private final ArtworkRepository repository;
     private final UserRepository users;
+    private final NotificationEventService notifications;
 
-    public ArtworkService(ArtworkRepository repository, UserRepository users) {
+    public ArtworkService(ArtworkRepository repository, UserRepository users, NotificationEventService notifications) {
         this.repository = repository;
         this.users = users;
+        this.notifications = notifications;
     }
 
     public ArtworkDtos.Response create(ArtworkDtos.CreateRequest request, User user) {
         Artwork a = new Artwork();
         apply(a, request);
         a.setArtistId(user.getId());
-        return ArtworkDtos.Response.from(repository.save(a));
+        Artwork saved = repository.save(a);
+        if (saved.getStatus() == ArtworkStatus.PUBLISHED) {
+            notifications.newArtwork(saved.getArtistId(), saved.getTitle());
+        }
+        return ArtworkDtos.Response.from(saved);
     }
 
     public Page<ArtworkDtos.Response> search(String q, String category, Pageable pageable) {
@@ -46,8 +53,13 @@ public class ArtworkService {
     public ArtworkDtos.Response update(UUID id, ArtworkDtos.CreateRequest request, User user) {
         Artwork a = repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Artwork not found"));
         if (!a.getArtistId().equals(user.getId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the artist can edit this artwork");
+        boolean wasPublished = a.getStatus() == ArtworkStatus.PUBLISHED;
         apply(a, request);
-        return ArtworkDtos.Response.from(repository.save(a));
+        Artwork saved = repository.save(a);
+        if (!wasPublished && saved.getStatus() == ArtworkStatus.PUBLISHED) {
+            notifications.newArtwork(saved.getArtistId(), saved.getTitle());
+        }
+        return ArtworkDtos.Response.from(saved);
     }
 
     public void delete(UUID id, User user) {
