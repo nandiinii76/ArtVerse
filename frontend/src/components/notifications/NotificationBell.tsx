@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api, extractErrorMessage } from '@/lib/api'
 
 type Notification = { id: string; type: string; title: string; message: string; readAt?: string; createdAt: string }
+type UnreadResponse = { count: number }
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
@@ -11,8 +12,10 @@ export function NotificationBell() {
   const [error, setError] = useState('')
 
   async function refreshCount() {
-    try { const response = await api.get<number>('/notifications/unread-count'); setCount(response.data) }
-    catch { /* notifications are non-critical */ }
+    try {
+      const response = await api.get<UnreadResponse>('/notifications/unread-count')
+      setCount(response.data.count ?? 0)
+    } catch { /* notifications are non-critical */ }
   }
 
   async function openNotifications() {
@@ -58,7 +61,7 @@ export function NotificationBell() {
     {open && <div className="absolute right-0 top-12 z-30 w-[min(22rem,calc(100vw-2rem))] border border-ink/15 bg-paper p-4 shadow-[0_18px_55px_rgba(29,27,24,.14)]">
       <div className="flex items-center justify-between border-b border-ink/10 pb-3"><div><p className="label-meta">Correspondence</p><h2 className="font-serif text-xl">Notifications</h2></div>{count > 0 && <button onClick={() => void markAllRead()} className="text-[9px] uppercase tracking-wider text-oxblood">Read all</button>}</div>
       {error && <p className="mt-3 text-xs text-oxblood">{error}</p>}
-      <div className="mt-2 max-h-80 overflow-auto">{items.length === 0 ? <p className="py-8 text-center text-sm text-ink/45">No correspondence.</p> : items.map(item => <button key={item.id} onClick={() => !item.readAt && void markRead(item.id)} className={`block w-full border-b border-ink/10 px-2 py-4 text-left ${item.readAt ? 'opacity-55' : 'bg-ink/[.025]'}`}><p className="text-[9px] uppercase tracking-wider text-olive">{item.type}</p><p className="mt-1 font-serif text-base">{item.title}</p><p className="mt-1 text-xs leading-5 text-ink/60">{item.message}</p><p className="mt-2 text-[9px] text-ink/35">{new Date(item.createdAt).toLocaleString()}</p></button>)}</div>
+      <div className="mt-2 max-h-80 overflow-auto">{items.length === 0 ? <p className="py-8 text-center text-sm text-ink/45">No correspondence.</p> : items.map(item => <button key={item.id} onClick={() => !item.readAt && void markRead(item.id)} className={`block w-full border-b border-ink/10 px-2 py-4 text-left ${item.readAt ? 'opacity-55' : 'bg-ink/[.025]'}`}><p className="text-[9px] uppercase tracking-wider text-olive">{item.type.replaceAll('_', ' ')}</p><p className="mt-1 font-serif text-base">{item.title}</p><p className="mt-1 text-xs leading-5 text-ink/60">{item.message}</p><p className="mt-2 text-[9px] text-ink/35">{new Date(item.createdAt).toLocaleString()}</p></button>)}</div>
       <Link to="/notifications" onClick={() => setOpen(false)} className="mt-3 block text-center text-[9px] uppercase tracking-[0.14em] text-oxblood">View all notifications →</Link>
     </div>}
   </div>
