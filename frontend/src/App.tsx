@@ -9,6 +9,7 @@ import { ArtworkPage } from '@/pages/ArtworkPage'
 import { ArtistPage } from '@/pages/ArtistPage'
 import { ArtistsPage } from '@/pages/ArtistsPage'
 import { StudioPage } from '@/pages/StudioPage'
+import { StudioMediaPage } from '@/pages/StudioMediaPage'
 import { MuseumPage } from '@/pages/MuseumPage'
 import { CuratorPage } from '@/pages/CuratorPage'
 import { AuctionsPage } from '@/pages/AuctionsPage'
@@ -37,6 +38,7 @@ export default function App() {
     <Route element={<ProtectedRoute />}>
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/studio" element={<StudioPage />} />
+      <Route path="/studio/media" element={<StudioMediaPage />} />
       <Route path="/collections" element={<CollectionsPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
     </Route>
