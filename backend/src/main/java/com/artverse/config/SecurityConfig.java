@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ROUTES).permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/artworks/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/marketplace/listings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/curator/**").permitAll()
