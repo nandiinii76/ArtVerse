@@ -4,6 +4,7 @@ import com.artverse.artwork.Artwork;
 import com.artverse.artwork.ArtworkRepository;
 import com.artverse.artwork.ArtworkStatus;
 import com.artverse.common.ApiException;
+import com.artverse.notification.NotificationEventService;
 import com.artverse.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ public class MarketplaceService {
     private final OrderRepository orders;
     private final ArtworkOwnershipRepository ownership;
     private final ArtworkRepository artworks;
+    private final NotificationEventService notificationEvents;
 
     @Transactional
     public MarketplaceDtos.ListingResponse createListing(UUID artworkId, MarketplaceDtos.CreateListingRequest request, User seller) {
@@ -81,11 +83,14 @@ public class MarketplaceService {
         order.setAmount(listing.getPrice());
         order.setCurrency(listing.getCurrency());
         order.setStatus(OrderStatus.PENDING);
-        return MarketplaceDtos.OrderResponse.from(orders.save(order));
+        Order saved = orders.save(order);
+        Artwork artwork = artwork(listing.getArtworkId());
+        notificationEvents.marketplaceOrder(listing.getSellerId(), buyer.getId(), artwork.getTitle());
+        return MarketplaceDtos.OrderResponse.from(saved);
     }
 
     public Page<MarketplaceDtos.OrderResponse> myOrders(User buyer, int page, int size) {
-        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50));
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.min(Math.max(size, 1), 50));
         return orders.findByBuyerIdOrderByCreatedAtDesc(buyer.getId(), pageable).map(MarketplaceDtos.OrderResponse::from);
     }
 
