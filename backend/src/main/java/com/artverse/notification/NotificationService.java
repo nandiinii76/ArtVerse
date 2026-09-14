@@ -8,6 +8,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class NotificationService {
     private final NotificationRepository notifications;
+    private final NotificationRealtimeService realtime;
 
     public void create(UUID userId, String type, String title, String message) {
         if (userId == null) return;
@@ -16,6 +17,6 @@ public class NotificationService {
         n.setType(type);
         n.setTitle(title);
         n.setMessage(message);
-        notifications.save(n);
+        realtime.publish(notifications.save(n));
     }
 }
