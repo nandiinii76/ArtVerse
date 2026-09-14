@@ -7,6 +7,7 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { ExplorePage } from '@/pages/ExplorePage'
 import { ArtworkPage } from '@/pages/ArtworkPage'
 import { ArtistPage } from '@/pages/ArtistPage'
+import { ArtistsPage } from '@/pages/ArtistsPage'
 import { StudioPage } from '@/pages/StudioPage'
 import { MuseumPage } from '@/pages/MuseumPage'
 import { CuratorPage } from '@/pages/CuratorPage'
@@ -21,6 +22,7 @@ export default function App() {
   return <div className="min-h-screen bg-paper text-ink"><Header /><Routes>
     <Route path="/" element={<HomePage />} />
     <Route path="/explore" element={<ExplorePage />} />
+    <Route path="/artists" element={<ArtistsPage />} />
     <Route path="/museum" element={<MuseumPage />} />
     <Route path="/curator" element={<CuratorPage />} />
     <Route path="/auctions" element={<AuctionsPage />} />
