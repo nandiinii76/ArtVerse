@@ -15,6 +15,7 @@ public class AuctionController {
     public AuctionController(AuctionService service) { this.service = service; }
 
     @GetMapping public Page<AuctionDtos.Response> list(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="20") int size) { return service.list(page,size); }
+    @GetMapping("/mine") public Page<AuctionDtos.Response> mine(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="30") int size, @AuthenticationPrincipal User user) { return service.myAuctions(user,page,size); }
     @GetMapping("/{id}") public AuctionDtos.Response get(@PathVariable UUID id) { return service.get(id); }
     @GetMapping("/{id}/bids") public Page<AuctionDtos.BidResponse> bids(@PathVariable UUID id, @RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="30") int size) { return service.bids(id,page,size); }
     @PostMapping("/artworks/{artworkId}") public AuctionDtos.Response create(@PathVariable UUID artworkId, @Valid @RequestBody AuctionDtos.CreateRequest request, @AuthenticationPrincipal User user) { return service.create(artworkId,request,user); }
