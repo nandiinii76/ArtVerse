@@ -49,6 +49,13 @@ public class AuctionService {
     }
 
     @Transactional
+    public Page<AuctionDtos.Response> myAuctions(User seller, int page, int size) {
+        syncDueAuctions();
+        Pageable p = PageRequest.of(Math.max(page,0), Math.min(Math.max(size,1),50));
+        return auctions.findBySellerIdOrderByEndsAtAsc(seller.getId(), p).map(AuctionDtos.Response::from);
+    }
+
+    @Transactional
     public AuctionDtos.Response get(UUID id) { return AuctionDtos.Response.from(sync(auction(id))); }
 
     @Transactional
