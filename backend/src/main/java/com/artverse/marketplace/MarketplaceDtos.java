@@ -14,11 +14,13 @@ public final class MarketplaceDtos {
             String currency) {}
 
     public record ListingResponse(
-            UUID id, UUID artworkId, UUID sellerId, BigDecimal price,
-            String currency, ListingStatus status, Instant createdAt) {
-        static ListingResponse from(MarketplaceListing l) {
-            return new ListingResponse(l.getId(), l.getArtworkId(), l.getSellerId(), l.getPrice(),
-                    l.getCurrency(), l.getStatus(), l.getCreatedAt());
+            UUID id, UUID artworkId, UUID sellerId, String sellerName,
+            String title, String imageUrl, String category, String style, String medium,
+            BigDecimal price, String currency, ListingStatus status, Instant createdAt) {
+        static ListingResponse from(MarketplaceListing l, String sellerName, com.artverse.artwork.Artwork artwork) {
+            return new ListingResponse(l.getId(), l.getArtworkId(), l.getSellerId(), sellerName,
+                    artwork.getTitle(), artwork.getImageUrl(), artwork.getCategory(), artwork.getStyle(), artwork.getMedium(),
+                    l.getPrice(), l.getCurrency(), l.getStatus(), l.getCreatedAt());
         }
     }
 
