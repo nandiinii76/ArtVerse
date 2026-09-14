@@ -28,6 +28,14 @@ public class ArtworkController {
         return service.search(q, category, PageRequest.of(Math.max(page, 0), size, s));
     }
 
+    @GetMapping("/mine")
+    public Page<ArtworkDtos.Response> mine(@RequestParam(defaultValue="0") int page,
+                                           @RequestParam(defaultValue="24") int size,
+                                           @AuthenticationPrincipal User user) {
+        size = Math.min(Math.max(size, 1), 50);
+        return service.mine(user.getId(), PageRequest.of(Math.max(page, 0), size, Sort.by(Sort.Direction.DESC, "createdAt")));
+    }
+
     @GetMapping("/{id}") public ArtworkDtos.Response get(@PathVariable UUID id) { return service.get(id); }
 
     @PostMapping
