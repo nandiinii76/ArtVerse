@@ -10,11 +10,11 @@ import java.util.UUID;
 
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, FavoriteId> {
-    boolean existsByArtworkIdAndUserId(UUID artworkId, UUID userId);
+    boolean existsByIdArtworkIdAndIdUserId(UUID artworkId, UUID userId);
 
     @Modifying
     @Transactional
-    void deleteByArtworkIdAndUserId(UUID artworkId, UUID userId);
+    void deleteByIdArtworkIdAndIdUserId(UUID artworkId, UUID userId);
 
     @Modifying
     @Transactional
