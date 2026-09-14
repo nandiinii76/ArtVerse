@@ -5,7 +5,6 @@ import com.artverse.artwork.ArtworkRepository;
 import com.artverse.artwork.ArtworkStatus;
 import com.artverse.common.ApiException;
 import com.artverse.user.User;
-import com.artverse.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +20,6 @@ public class CollectionService {
     private final CollectionRepository collections;
     private final CollectionArtworkRepository items;
     private final ArtworkRepository artworks;
-    private final UserRepository users;
 
     public Page<CollectionDtos.Response> myCollections(User user, int page, int size) {
         return collections.findByOwnerIdOrderByCreatedAtDesc(user.getId(), pageRequest(page, size)).map(this::response);
@@ -54,9 +52,7 @@ public class CollectionService {
             if (!items.existsById(new CollectionArtworkId(id, request.coverArtworkId())))
                 throw ApiException.notFound("ARTWORK_NOT_IN_COLLECTION", "Cover artwork must belong to this collection");
             c.setCoverArtworkId(request.coverArtworkId());
-        } else {
-            c.setCoverArtworkId(null);
-        }
+        } else c.setCoverArtworkId(null);
         return response(collections.save(c));
     }
 
@@ -105,7 +101,6 @@ public class CollectionService {
         Collection c = collection(id);
         if (!c.isPublicCollection()) throw new ApiException(HttpStatus.NOT_FOUND, "COLLECTION_NOT_FOUND", "Collection not found");
         return items.findByIdCollectionIdOrderByAddedAtDesc(id, pageRequest(page, size))
-                .filter(item -> artworks.findById(item.getId().getArtworkId()).map(a -> a.getStatus() == ArtworkStatus.PUBLISHED).orElse(false))
                 .map(item -> new CollectionDtos.ArtworkResponse(id, item.getId().getArtworkId(), item.getAddedAt()));
     }
 
