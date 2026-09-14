@@ -3,9 +3,10 @@ package com.artverse.marketplace;
 import com.artverse.user.User;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.ResponseEntity;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
@@ -13,7 +14,11 @@ import java.util.UUID;
 public class MarketplaceController {
     private final MarketplaceService service;
     public MarketplaceController(MarketplaceService service) { this.service = service; }
-    @GetMapping("/listings") public Page<MarketplaceDtos.ListingResponse> listings(@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="24") int size){return service.listActive(page,size);}
+
+    @GetMapping("/listings") public Page<MarketplaceDtos.ListingResponse> listings(@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="24") int size,@RequestParam(required=false) String q,@RequestParam(required=false) String category,@RequestParam(required=false) String style,@RequestParam(required=false) BigDecimal minPrice,@RequestParam(required=false) BigDecimal maxPrice){
+        if ((q != null && !q.isBlank()) || (category != null && !category.isBlank()) || (style != null && !style.isBlank()) || minPrice != null || maxPrice != null) return service.searchActive(q,category,style,minPrice,maxPrice,page,size);
+        return service.listActive(page,size);
+    }
     @GetMapping("/listings/mine") public Page<MarketplaceDtos.ListingResponse> myListings(@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="30") int size,@AuthenticationPrincipal User user){return service.myListings(user,page,size);}
     @GetMapping("/listings/{id}") public MarketplaceDtos.ListingResponse listing(@PathVariable UUID id){return service.getListing(id);}
     @PostMapping("/listings/{artworkId}") public MarketplaceDtos.ListingResponse createListing(@PathVariable UUID artworkId,@Valid @RequestBody MarketplaceDtos.CreateListingRequest request,@AuthenticationPrincipal User user){return service.createListing(artworkId,request,user);}
