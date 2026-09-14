@@ -1,108 +1,93 @@
-# ARTVERSE — Foundation
+# ARTVERSE — Digital Museum & Art Marketplace
 
-Phase 0 of the ARTVERSE build: a working, end-to-end skeleton with a Java/Spring Boot backend and
-a React/TypeScript frontend, wired together through a real authentication flow (register, login,
-JWT access + refresh tokens, protected routes). Visual language follows the vintage/museum design
-tokens from the spec (paper, ink, oxblood, aged brass; serif display type).
+ARTVERSE is a Java/Spring Boot + React platform for discovering, cataloguing and eventually trading art. The visual direction is deliberately **vintage museum / archival**, using paper, ink, oxblood, olive and aged-brass tones instead of a generic AI dashboard aesthetic.
 
-## Stack
+## Current stack
+- Backend: Java 21, Spring Boot 3.3.4, Spring Security, JWT, Spring Data JPA, PostgreSQL, Flyway, OpenAPI
+- Frontend: React 18, TypeScript, Vite, Tailwind CSS, React Router, Zustand, Axios
+- Infrastructure: Docker Compose + PostgreSQL
 
-- **Backend:** Java 21, Spring Boot 3.3, Spring Security, JWT (jjwt), Spring Data JPA, PostgreSQL, Flyway, springdoc-openapi
-- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, React Router, Zustand, Axios
+## Implemented foundation
+- Registration, login, refresh-token flow and authenticated `/me`
+- BCrypt password hashing and stateless JWT security
+- Role model: USER, ARTIST, GALLERY, CURATOR, ADMIN, MODERATOR
+- Flyway database migrations
+- Artwork catalogue entity and REST API
+- Artwork search by title/description/style/medium and category filtering
+- Pagination and sorting
+- Artwork create, update, view and delete operations with artist ownership checks
+- Artist profile entity and `/api/v1/artists` API
+- Favorites, follows, comments, collections and notifications database model
+- Marketplace listings, orders and ownership database model
+- Auction and bid database model ready for live-bidding implementation
+- Vintage Explore catalogue, artwork detail page and protected Artist Studio
+- Museum-style landing page and expanded navigation
+- Docker Compose development environment
 
-## Project layout
+## API highlights
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `GET /api/v1/auth/me`
+- `GET /api/v1/artworks?q=&category=&page=&size=&sort=`
+- `GET /api/v1/artworks/{id}`
+- `POST /api/v1/artworks`
+- `PUT /api/v1/artworks/{id}`
+- `DELETE /api/v1/artworks/{id}`
+- `GET /api/v1/artists/{userId}`
+- `PUT /api/v1/artists/me`
+- `GET /api/health`
 
-```
-artverse/
-├── backend/                  Spring Boot API (com.artverse package)
-│   ├── src/main/java/com/artverse/
-│   │   ├── auth/              register / login / refresh / me
-│   │   ├── security/           JWT filter, JWT service, UserDetailsService
-│   │   ├── user/                User entity, Role enum, repository
-│   │   ├── config/              Spring Security + CORS config
-│   │   ├── common/               ApiResponse envelope, ApiException, global error handler
-│   │   └── health/                GET /api/health
-│   └── src/main/resources/
-│       ├── application.yml
-│       └── db/migration/V1__init_schema.sql   (Flyway)
-├── frontend/                 React app
-│   └── src/
-│       ├── pages/              Home, Login, Register, Dashboard
-│       ├── components/layout/  Header
-│       ├── routes/              ProtectedRoute
-│       ├── store/                Zustand auth store (persisted to localStorage)
-│       ├── lib/                   axios client with auto token-refresh, auth API calls
-│       └── types/                 shared TS types
-├── docker-compose.yml
-└── .env.example
-```
+## Frontend routes
+- `/` — museum landing page
+- `/explore` — searchable collection
+- `/artworks/:id` — artwork catalogue detail
+- `/login` and `/register`
+- `/dashboard` — protected account area
+- `/studio` — protected artist catalogue form
 
-## Run it locally
+## Run locally
 
-### Option A — Docker Compose (recommended)
-
+### Docker
 ```bash
-cp .env.example .env      # edit JWT_SECRET and DB_PASSWORD before any real use
+cp .env.example .env
 docker compose up --build
 ```
 
-- Backend: http://localhost:8080 (Swagger UI at `/swagger-ui.html`)
-- Frontend: http://localhost:5173
-- Postgres: localhost:5432
+Frontend: `http://localhost:5173`  
+Backend: `http://localhost:8080`  
+Swagger: `http://localhost:8080/swagger-ui.html`  
+PostgreSQL: `localhost:5432`
 
-### Option B — Run each piece by hand
-
-**Postgres** (or point `DB_URL` at any Postgres instance):
-```bash
-docker run -d --name artverse-db -e POSTGRES_DB=artverse \
-  -e POSTGRES_USER=artverse -e POSTGRES_PASSWORD=artverse \
-  -p 5432:5432 postgres:16-alpine
-```
-
-**Backend:**
+### Manual
 ```bash
 cd backend
-export JWT_SECRET=$(openssl rand -base64 48)
 mvn spring-boot:run
 ```
-Flyway runs the migration automatically on startup — no manual schema step needed.
 
-**Frontend:**
+In another terminal:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-> Note: this sandbox's network allowlist doesn't include Maven Central, so the Java side could not
-> be `mvn compile`-verified here. It was written and reviewed carefully, but run a build on your
-> machine before relying on it. The frontend **was** installed, type-checked (`tsc -b`), and
-> production-built successfully in this environment.
+## Roadmap
 
-## What's implemented
+The database is intentionally prepared for the larger platform while the application is built incrementally:
 
-- `POST /api/v1/auth/register` — creates a user (BCrypt-hashed password), returns access + refresh tokens
-- `POST /api/v1/auth/login` — authenticates, returns access + refresh tokens
-- `POST /api/v1/auth/refresh` — exchanges a valid refresh token for a new token pair
-- `GET  /api/v1/auth/me` — returns the authenticated user (requires `Authorization: Bearer <token>`)
-- `GET  /api/health` — liveness check
-- Stateless JWT security filter chain; BCrypt password hashing; role model (`USER`, `ARTIST`,
-  `GALLERY`, `CURATOR`, `ADMIN`, `MODERATOR`) via an `@ElementCollection` on `User`
-- Consistent `ApiResponse<T>` envelope on every response, with a global exception handler for
-  validation errors, auth failures, conflicts, and unhandled exceptions
-- Frontend: axios interceptor that attaches the access token and transparently retries a request
-  once on 401 by refreshing the token; Zustand store persists the session to `localStorage`;
-  `ProtectedRoute` guards `/dashboard` and redirects to `/login`
+1. Artwork and artist catalogue — implemented
+2. Explore/search — implemented at relational-search level
+3. Image/object storage and provenance documents
+4. Favorites, follows, comments, collections and notifications
+5. Marketplace checkout/payment integration
+6. Auctions and live bids with WebSocket
+7. AI curator and semantic/vector search
+8. Three.js/React Three Fiber virtual museum
+9. Kafka event architecture and real-time activity
+10. Role-based admin/moderation console
+11. JUnit/Mockito/Testcontainers + Vitest/RTL test suites
+12. Actuator/Micrometer observability and GitHub Actions CI/CD
 
-## What's deliberately out of scope for this phase
-
-Everything else in the master spec — artworks, artists, marketplace, auctions, the 3D virtual
-museum, AI curator, admin panel, search, messaging, etc. Those are separate build phases on top of
-this foundation. See the roadmap in the vintage spec (section 26) for the suggested order.
-
-## Next steps
-
-1. Add the `artworks` / `artists` domains (entities, migrations, DTOs, endpoints) and an Explore
-   page in the frontend.
-2. Add `/studio` and `/admin` route shells guarded by role, not just authentication.
-3. Add Vitest + JUnit test suites for what's here before layering on more domains.
+## Important
+The project is now a substantially expanded application skeleton, but external payment providers, cloud storage credentials, AI provider credentials, Kafka/OpenSearch infrastructure and production deployment still need environment-specific configuration. Run `mvn test` and `npm run build` locally after pulling the latest changes.
