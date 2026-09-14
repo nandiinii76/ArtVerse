@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, extractErrorMessage } from '@/lib/api'
+import { connectNotifications } from '@/lib/realtime'
+import { useAuthStore } from '@/store/authStore'
 
 type Notification = { id: string; type: string; title: string; message: string; readAt?: string; createdAt: string }
 type UnreadResponse = { count: number }
 
 export function NotificationBell() {
+  const user = useAuthStore(s => s.user)
   const [open, setOpen] = useState(false)
   const [count, setCount] = useState(0)
   const [items, setItems] = useState<Notification[]>([])
@@ -32,9 +35,14 @@ export function NotificationBell() {
 
   useEffect(() => {
     void refreshCount()
-    const timer = window.setInterval(() => void refreshCount(), 30000)
-    return () => window.clearInterval(timer)
-  }, [])
+    if (!user?.id) return
+    return connectNotifications(user.id, (incoming) => {
+      const notification = incoming as Notification
+      if (!notification?.id) return
+      setItems(current => [notification, ...current.filter(item => item.id !== notification.id)].slice(0, 12))
+      setCount(current => current + (notification.readAt ? 0 : 1))
+    })
+  }, [user?.id])
 
   async function markRead(id: string) {
     try {
