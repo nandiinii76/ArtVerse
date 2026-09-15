@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,6 +40,8 @@ class AuctionServiceTest {
         auction.setStatus(AuctionStatus.LIVE);
         auction.setCurrentPrice(new BigDecimal("1000.00"));
         auction.setMinimumIncrement(new BigDecimal("100.00"));
+        auction.setStartsAt(Instant.now().minusSeconds(60));
+        auction.setEndsAt(Instant.now().plusSeconds(3600));
         when(auctions.findWithLockById(auctionId)).thenReturn(java.util.Optional.of(auction));
 
         AuctionDtos.BidRequest request = new AuctionDtos.BidRequest(new BigDecimal("1200.00"));
@@ -61,6 +64,8 @@ class AuctionServiceTest {
         auction.setStatus(AuctionStatus.LIVE);
         auction.setCurrentPrice(new BigDecimal("1000.00"));
         auction.setMinimumIncrement(new BigDecimal("100.00"));
+        auction.setStartsAt(Instant.now().minusSeconds(60));
+        auction.setEndsAt(Instant.now().plusSeconds(3600));
         when(auctions.findWithLockById(auctionId)).thenReturn(java.util.Optional.of(auction));
 
         AuctionDtos.BidRequest request = new AuctionDtos.BidRequest(new BigDecimal("1050.00"));
