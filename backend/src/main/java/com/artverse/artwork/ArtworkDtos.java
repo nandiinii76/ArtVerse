@@ -29,7 +29,7 @@ public final class ArtworkDtos {
                            String category, String style, String medium, Integer yearCreated,
                            BigDecimal price, String currency, ArtworkStatus status, boolean featured,
                            long views, Instant createdAt) {
-        static Response from(Artwork a) {
+        public static Response from(Artwork a) {
             return new Response(a.getId(), a.getTitle(), a.getDescription(), a.getImageUrl(), a.getArtistId(),
                     a.getCategory(), a.getStyle(), a.getMedium(), a.getYearCreated(), a.getPrice(),
                     a.getCurrency(), a.getStatus(), a.isFeatured(), a.getViews(), a.getCreatedAt());
