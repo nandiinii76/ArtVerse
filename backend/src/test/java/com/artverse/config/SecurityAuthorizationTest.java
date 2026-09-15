@@ -2,6 +2,8 @@ package com.artverse.config;
 
 import com.artverse.admin.AdminController;
 import com.artverse.artwork.ArtworkRepository;
+import com.artverse.security.CustomUserDetailsService;
+import com.artverse.security.JwtService;
 import com.artverse.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +62,16 @@ class SecurityAuthorizationTest {
         @Bean
         ArtworkRepository artworks() {
             return mock(ArtworkRepository.class);
+        }
+
+        @Bean
+        JwtService jwtService() {
+            return mock(JwtService.class);
+        }
+
+        @Bean
+        CustomUserDetailsService customUserDetailsService() {
+            return mock(CustomUserDetailsService.class);
         }
 
         @Bean
