@@ -19,8 +19,7 @@ public class CloudinaryMediaStorage implements MediaStorage {
             @Value("${CLOUDINARY_URL:}") String cloudinaryUrl,
             @Value("${artverse.media.provider:local}") String provider) {
         this.enabled = "cloudinary".equalsIgnoreCase(provider) && !cloudinaryUrl.isBlank();
-        this.cloudinary = new Cloudinary();
-        if (this.enabled) this.cloudinary.configFromURL(cloudinaryUrl);
+        this.cloudinary = this.enabled ? new Cloudinary(cloudinaryUrl) : new Cloudinary();
     }
 
     @Override
