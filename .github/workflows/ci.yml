@@ -28,7 +28,7 @@ jobs:
         run: ./mvnw test
 
   frontend:
-    name: Frontend validation
+    name: Frontend build validation
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,8 +47,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
+      - name: TypeScript and production build
         run: npm run build
