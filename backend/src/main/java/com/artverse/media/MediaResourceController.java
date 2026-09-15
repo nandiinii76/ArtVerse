@@ -18,7 +18,7 @@ public class MediaResourceController {
     @GetMapping("/{id}")
     public ResponseEntity<Resource> get(@PathVariable UUID id) {
         MediaAsset asset = service.get(id);
-        Path path = service.path(asset);
+        Path path = service.localPath(asset);
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(asset.getContentType())).body(new FileSystemResource(path));
     }
 }
