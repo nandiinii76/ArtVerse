@@ -12,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -47,7 +46,7 @@ class AuctionServiceTest {
         assertThrows(com.artverse.common.ApiException.class,
                 () -> service.bid(auctionId, request, seller));
         verify(bids, never()).save(any());
-        verify(messaging, never()).convertAndSend(anyString(), any());
+        verify(messaging, never()).convertAndSend(anyString(), any(Object.class));
     }
 
     @Test
