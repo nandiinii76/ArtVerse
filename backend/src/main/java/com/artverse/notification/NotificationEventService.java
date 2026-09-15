@@ -19,7 +19,7 @@ public class NotificationEventService {
     public void follow(UUID artistId, UUID followerId) { if (!same(artistId, followerId)) notifications.create(artistId,"NEW_FOLLOWER","New follower","Someone started following your work."); }
     public void newArtwork(UUID artistId, String artworkTitle) {
         for (Follow follow : follows.findAllByIdFollowingId(artistId)) {
-            UUID followerId = follow.getId().getFollowerId();
+            UUID followerId = follow.getFollowerId();
             notifications.create(followerId, "NEW_ARTWORK", "New artwork published",
                     "A new artwork, \"" + artworkTitle + "\", has been added to an artist you follow.");
         }
