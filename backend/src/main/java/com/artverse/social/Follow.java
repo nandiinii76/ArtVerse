@@ -20,6 +20,8 @@ public class Follow {
     public Follow(FollowId id) { this.id = id; }
 
     public FollowId getId() { return id; }
+    public UUID getFollowerId() { return id.getFollowerId(); }
+    public UUID getFollowingId() { return id.getFollowingId(); }
 }
 
 @Embeddable
