@@ -38,7 +38,7 @@ CREATE TABLE follows (
     artist_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY(follower_id, artist_id), CHECK(follower_id <> artist_id)
 );
-CREATE TABLE comments (
+CREATE TABLE artwork_comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(), artwork_id UUID NOT NULL REFERENCES artworks(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, body VARCHAR(2000) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
