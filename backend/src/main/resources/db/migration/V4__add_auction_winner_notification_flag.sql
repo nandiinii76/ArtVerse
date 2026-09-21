@@ -1,1 +1,2 @@
-ALTER TABLE auctions ADD COLUMN winner_notified BOOLEAN NOT NULL DEFAULT FALSE;
+-- MySQL baseline schema is created by V1__init_schema.sql.
+-- This version is intentionally retained as a no-op for Flyway history.
