@@ -1,21 +1,22 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: artverse-postgres
+  mysql:
+    image: mysql:9.6
+    container_name: artverse-mysql
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-artverse}
-      POSTGRES_USER: ${DB_USERNAME:-artverse}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-artverse}
+      MYSQL_DATABASE: ${DB_NAME:-artverse}
+      MYSQL_USER: ${DB_USERNAME:-artverse}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-artverse}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - artverse_postgres_data:/var/lib/postgresql/data
+      - artverse_mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-artverse}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${DB_USERNAME:-artverse} -p${DB_PASSWORD:-artverse} --silent"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
 
   opensearch:
     image: opensearchproject/opensearch:2.17.1
@@ -43,12 +44,12 @@ services:
     container_name: artverse-backend
     restart: unless-stopped
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
       opensearch:
         condition: service_started
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-artverse}
+      DB_URL: jdbc:mysql://mysql:3306/${DB_NAME:-artverse}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: ${DB_USERNAME:-artverse}
       DB_PASSWORD: ${DB_PASSWORD:-artverse}
       JWT_SECRET: ${JWT_SECRET:-change-this-to-a-long-random-string-in-.env-minimum-32-chars}
@@ -74,5 +75,5 @@ services:
       - /app/node_modules
 
 volumes:
-  artverse_postgres_data:
+  artverse_mysql_data:
   artverse_opensearch_data:
