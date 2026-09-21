@@ -1,3 +1,2 @@
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_id UUID;
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS auction_id UUID;
-CREATE UNIQUE INDEX IF NOT EXISTS uk_orders_auction_id ON orders(auction_id) WHERE auction_id IS NOT NULL;
+-- MySQL baseline schema is created by V1__init_schema.sql.
+-- This version is intentionally retained as a no-op for Flyway history.
