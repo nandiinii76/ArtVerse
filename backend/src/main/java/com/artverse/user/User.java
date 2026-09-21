@@ -25,7 +25,7 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue
-    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    @Column(updatable = false, nullable = false)
     private UUID id;
 
     @Column(nullable = false, unique = true, length = 254)
