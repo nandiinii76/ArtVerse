@@ -1,2 +1,2 @@
-ALTER TABLE collections RENAME COLUMN user_id TO owner_id;
-ALTER TABLE collections ADD COLUMN cover_artwork_id UUID REFERENCES artworks(id) ON DELETE SET NULL;
+-- MySQL baseline schema is created by V1__init_schema.sql.
+-- This version is intentionally retained as a no-op for Flyway history.
