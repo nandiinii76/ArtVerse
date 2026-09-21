@@ -2,9 +2,10 @@ spring:
   application:
     name: artverse-backend
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/artverse}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/artverse?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata}
     username: ${DB_USERNAME:artverse}
     password: ${DB_PASSWORD:artverse}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: validate
@@ -12,6 +13,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        type:
+          preferred_uuid_jdbc_type: CHAR
   flyway:
     enabled: true
     locations: classpath:db/migration
