@@ -1,2 +1,2 @@
--- Obsolete compatibility migration.
--- artist_profiles.website_url and profile_image_url are created by V2__artverse_domains.sql.
+-- MySQL baseline schema is created by V1__init_schema.sql.
+-- This version is intentionally retained as a no-op for Flyway history.
