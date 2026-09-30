@@ -10,6 +10,25 @@ jobs:
   backend:
     name: Backend tests
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: artverse
+          MYSQL_USER: artverse
+          MYSQL_PASSWORD: artverse
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uartverse -partverse --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DB_URL: jdbc:mysql://127.0.0.1:3306/artverse?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: artverse
+      DB_PASSWORD: artverse
     defaults:
       run:
         working-directory: backend
