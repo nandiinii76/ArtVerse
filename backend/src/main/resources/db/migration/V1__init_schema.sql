@@ -120,8 +120,7 @@ CREATE TABLE orders (
     PRIMARY KEY (id),
     CONSTRAINT fk_orders_buyer FOREIGN KEY (buyer_id) REFERENCES users(id),
     CONSTRAINT fk_orders_artwork FOREIGN KEY (artwork_id) REFERENCES artworks(id),
-    CONSTRAINT fk_orders_seller FOREIGN KEY (seller_id) REFERENCES users(id),
-    CONSTRAINT fk_orders_auction FOREIGN KEY (auction_id) REFERENCES auctions(id)
+    CONSTRAINT fk_orders_seller FOREIGN KEY (seller_id) REFERENCES users(id)
 );
 
 CREATE TABLE artwork_ownership (
