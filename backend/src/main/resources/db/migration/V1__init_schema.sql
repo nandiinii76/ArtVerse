@@ -119,7 +119,9 @@ CREATE TABLE orders (
     updated_at TIMESTAMP(6) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_orders_buyer FOREIGN KEY (buyer_id) REFERENCES users(id),
-    CONSTRAINT fk_orders_artwork FOREIGN KEY (artwork_id) REFERENCES artworks(id)
+    CONSTRAINT fk_orders_artwork FOREIGN KEY (artwork_id) REFERENCES artworks(id),
+    CONSTRAINT fk_orders_seller FOREIGN KEY (seller_id) REFERENCES users(id),
+    CONSTRAINT fk_orders_auction FOREIGN KEY (auction_id) REFERENCES auctions(id)
 );
 
 CREATE TABLE artwork_ownership (
@@ -199,6 +201,7 @@ CREATE INDEX idx_collections_owner ON collections(owner_id);
 CREATE TABLE collection_artworks (
     collection_id CHAR(36) NOT NULL,
     artwork_id CHAR(36) NOT NULL,
+    added_at TIMESTAMP(6) NOT NULL,
     PRIMARY KEY (collection_id, artwork_id),
     CONSTRAINT fk_collection_artworks_collection FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE,
     CONSTRAINT fk_collection_artworks_artwork FOREIGN KEY (artwork_id) REFERENCES artworks(id) ON DELETE CASCADE
